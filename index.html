@@ -1,10 +1,12 @@
+Here is the complete HTML document with a fully functional registration form and proper permissions where Students can view syllabus data and add new syllabus entries, but cannot delete them.
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#0066ff">
-  <title>BEU Syllabus Manager | Student + Admin Dashboard</title>
+  <title>BEU Syllabus Manager | Student View/Add | Admin Full Control</title>
   <!-- Google Identity Services SDK for Admin -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
@@ -26,7 +28,6 @@
       margin: 0 auto;
     }
 
-    /* Header */
     .header {
       text-align: center;
       margin-bottom: 30px;
@@ -47,7 +48,6 @@
       color: #475569;
     }
 
-    /* Role Tabs */
     .role-tabs {
       display: flex;
       gap: 15px;
@@ -74,7 +74,6 @@
     .role-btn.student.active { background: #10b981; }
     .role-btn.admin.active { background: #8b5cf6; }
 
-    /* Panels */
     .panel {
       display: none;
       animation: fadeIn 0.3s ease;
@@ -87,7 +86,6 @@
       to { opacity: 1; transform: translateY(0);}
     }
 
-    /* Cards */
     .card {
       background: white;
       border-radius: 28px;
@@ -103,7 +101,6 @@
       padding-left: 15px;
     }
 
-    /* Forms & Inputs */
     .form-group {
       margin-bottom: 18px;
     }
@@ -120,6 +117,12 @@
       border-radius: 28px;
       font-size: 0.95rem;
       background: white;
+      transition: 0.2s;
+    }
+    input:focus, select:focus {
+      outline: none;
+      border-color: #0066ff;
+      box-shadow: 0 0 0 3px rgba(0,102,255,0.1);
     }
     .btn {
       padding: 12px 24px;
@@ -132,14 +135,18 @@
       background: #0066ff;
       color: white;
     }
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
     .btn-primary { background: #0066ff; }
     .btn-success { background: #10b981; }
     .btn-danger { background: #ef4444; }
     .btn-warning { background: #f59e0b; }
     .btn-purple { background: #8b5cf6; }
     .btn-sm { padding: 6px 14px; font-size: 0.8rem; }
+    .btn-secondary { background: #64748b; }
 
-    /* Tables / Syllabus List */
     .syllabus-grid, .pending-list, .student-list {
       display: flex;
       flex-direction: column;
@@ -161,10 +168,6 @@
     .syllabus-info, .student-info {
       flex: 1;
     }
-    .syllabus-info strong, .student-info strong {
-      font-size: 1rem;
-      color: #0f172a;
-    }
     .badge {
       background: #e2e8f0;
       padding: 4px 12px;
@@ -177,11 +180,23 @@
     }
     .msg-area {
       margin-top: 15px;
-      padding: 10px;
+      padding: 12px;
       border-radius: 20px;
       background: #f1f5f9;
       text-align: center;
       font-size: 0.85rem;
+    }
+    .msg-success {
+      background: #d1fae5;
+      color: #065f46;
+    }
+    .msg-error {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+    .msg-info {
+      background: #eef2ff;
+      color: #1e40af;
     }
     .guest-warning {
       color: #b91c1c;
@@ -193,6 +208,8 @@
       padding: 4px 12px;
       border-radius: 30px;
       font-size: 0.7rem;
+      display: inline-block;
+      margin-left: 10px;
     }
     .google-btn-wrapper {
       margin: 15px 0;
@@ -206,6 +223,22 @@
       font-size: 0.75rem;
       color: #64748b;
     }
+    .info-box {
+      background: #eef2ff;
+      padding: 12px;
+      border-radius: 16px;
+      margin-bottom: 15px;
+      font-size: 0.85rem;
+    }
+    .permission-badge {
+      display: inline-block;
+      background: #10b981;
+      color: white;
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      margin-left: 10px;
+    }
   </style>
 </head>
 <body>
@@ -214,14 +247,14 @@
   <div class="header">
     <img class="logo-img" src="https://raw.githubusercontent.com/mdzafar864/BEU-Syllabus-App/main/logo.png" alt="BEU" onerror="this.src='https://via.placeholder.com/70?text=BEU'">
     <h1>📚 BEU Syllabus Manager</h1>
-    <p class="sub">Student: View syllabus only | Admin: Full control + Approve registrations</p>
+    <p class="sub">Student: View & Add Syllabus (No Delete) | Admin: Full Control + Approve Registrations</p>
   </div>
 
   <!-- Role Selection Tabs -->
   <div class="role-tabs">
     <button class="role-btn guest active" onclick="switchRole('guest')">👤 Guest (80 sec)</button>
-    <button class="role-btn student" onclick="switchRole('student')">🎓 Student Login</button>
-    <button class="role-btn admin" onclick="switchRole('admin')">🛡️ Admin (Google)</button>
+    <button class="role-btn student" onclick="switchRole('student')">🎓 Student Portal</button>
+    <button class="role-btn admin" onclick="switchRole('admin')">🛡️ Admin Console</button>
   </div>
 
   <!-- ===================== GUEST PANEL ===================== -->
@@ -232,63 +265,90 @@
         <div style="font-size:2rem; font-weight:bold;" id="guestTimer">01:20</div>
         <div id="guestMsg" class="guest-warning"></div>
       </div>
-      <div class="form-group"><label>Branch</label><select id="guestBranch"><option value="">Select</option><option>CE</option><option>CS</option><option>IOT</option><option>EE</option><option>ECE</option><option>ME</option></select></div>
-      <div class="form-group"><label>Semester</label><select id="guestSem"><option value="">Select</option><option>1st</option><option>2nd</option><option>3rd</option><option>4th</option><option>5th</option><option>6th</option><option>7th</option><option>8th</option></select></div>
+      <div class="form-group"><label>Branch</label><select id="guestBranch"><option value="">Select Branch</option><option>CE</option><option>CS</option><option>IOT</option><option>EE</option><option>ECE</option><option>ME</option></select></div>
+      <div class="form-group"><label>Semester</label><select id="guestSem"><option value="">Select Semester</option><option>1st</option><option>2nd</option><option>3rd</option><option>4th</option><option>5th</option><option>6th</option><option>7th</option><option>8th</option></select></div>
       <button class="btn" id="guestViewBtn">📖 View Syllabus</button>
       <div id="guestMsgArea" class="msg-area"></div>
     </div>
   </div>
 
-  <!-- ===================== STUDENT PANEL ===================== -->
+  <!-- ===================== STUDENT PANEL (View & Add Only - No Delete) ===================== -->
   <div id="studentPanel" class="panel">
     <div class="card">
-      <h2>🎓 Student Portal</h2>
+      <h2>🎓 Student Portal <span class="permission-badge">View & Add Only</span></h2>
+      
       <!-- Login Form -->
       <div id="studentLoginForm">
         <div class="form-group"><label>Email / Registration No</label><input type="text" id="studentLoginId" placeholder="email or regno"></div>
         <div class="form-group"><label>Password</label><input type="password" id="studentLoginPass" placeholder="password"></div>
         <button class="btn btn-primary" id="studentLoginBtn">Login</button>
-        <div class="msg-area" style="margin-top:15px;">New student? <strong><a href="#" id="showRegisterLink">Register here</a></strong> (Approval required)</div>
-        <div id="studentLoginMsg"></div>
+        <div class="info-box" style="margin-top:15px;">
+          🔔 New student? <strong><a href="#" id="showRegisterLink" style="color:#0066ff;">Click here to register</a></strong><br>
+          <small>⚠️ Registration requires admin approval before login access.</small>
+        </div>
+        <div id="studentLoginMsg" class="msg-area"></div>
       </div>
-      <!-- Registration Form (pending approval) -->
+      
+      <!-- Registration Form -->
       <div id="studentRegisterForm" style="display:none;">
-        <h3>📝 Register as Student</h3>
-        <div class="form-group"><input type="text" id="regFullName" placeholder="Full Name"></div>
-        <div class="form-group"><input type="email" id="regEmail" placeholder="Email"></div>
-        <div class="form-group"><input type="password" id="regPassword" placeholder="Password (min 4 chars)"></div>
-        <div class="form-group"><input type="text" id="regRegNo" placeholder="Registration Number"></div>
-        <div class="form-group"><select id="regBranch"><option>CE</option><option>CS</option><option>IOT</option><option>EE</option><option>ECE</option><option>ME</option></select></div>
-        <div class="form-group"><select id="regSem"><option>1st</option><option>2nd</option><option>3rd</option><option>4th</option><option>5th</option><option>6th</option><option>7th</option><option>8th</option></select></div>
-        <div class="form-group"><input type="text" id="regTelegram" placeholder="Telegram Username (optional)"></div>
-        <button class="btn btn-success" id="registerRequestBtn">Submit Registration (Pending Admin Approval)</button>
-        <button class="btn" id="backToLoginBtn" style="background:#94a3b8; margin-top:10px;">Back to Login</button>
+        <h3>📝 Student Registration Form</h3>
+        <div class="info-box">✅ Fill all details. After submission, wait for admin approval.</div>
+        <div class="form-group"><label>Full Name *</label><input type="text" id="regFullName" placeholder="Enter your full name"></div>
+        <div class="form-group"><label>Email Address *</label><input type="email" id="regEmail" placeholder="example@beu.edu"></div>
+        <div class="form-group"><label>Password *</label><input type="password" id="regPassword" placeholder="Minimum 4 characters"></div>
+        <div class="form-group"><label>Registration Number *</label><input type="text" id="regRegNo" placeholder="BEU Registration Number"></div>
+        <div class="form-group"><label>Branch *</label><select id="regBranch"><option value="">Select Branch</option><option>CE</option><option>CS</option><option>IOT</option><option>EE</option><option>ECE</option><option>ME</option></select></div>
+        <div class="form-group"><label>Semester *</label><select id="regSem"><option value="">Select Semester</option><option>1st</option><option>2nd</option><option>3rd</option><option>4th</option><option>5th</option><option>6th</option><option>7th</option><option>8th</option></select></div>
+        <div class="form-group"><label>Telegram Username (Optional)</label><input type="text" id="regTelegram" placeholder="@username"></div>
+        <button class="btn btn-success" id="registerRequestBtn">📝 Submit Registration</button>
+        <button class="btn btn-secondary" id="backToLoginBtn" style="margin-top:10px;">← Back to Login</button>
         <div id="registerMsg" class="msg-area"></div>
       </div>
-      <!-- Student Dashboard (after approval & login) -->
+      
+      <!-- Student Dashboard (View & Add Only) -->
       <div id="studentDashboard" style="display:none;">
         <div style="background:#d1fae5; border-radius:20px; padding:15px; margin-bottom:20px;">
-          <div style="display:flex; justify-content:space-between;"><strong>👨‍🎓 Student Dashboard</strong><button id="studentLogoutBtn" class="btn btn-sm btn-danger">Logout</button></div>
-          <div id="studentProfile"></div>
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;">
+            <div>
+              <strong>👨‍🎓 Student Dashboard</strong>
+              <span style="background:#10b981; color:white; padding:2px 10px; border-radius:20px; font-size:0.7rem; margin-left:10px;">View & Add Only</span>
+            </div>
+            <button id="studentLogoutBtn" class="btn btn-sm btn-danger">Logout</button>
+          </div>
+          <div id="studentProfile" style="margin-top:10px;"></div>
         </div>
-        <h3>📄 View Syllabus (Read Only)</h3>
+        
+        <!-- View Syllabus Section -->
+        <h3>📄 View Syllabus</h3>
         <div class="form-group"><label>Branch</label><select id="studentViewBranch"></select></div>
         <div class="form-group"><label>Semester</label><select id="studentViewSem"><option>1st</option><option>2nd</option><option>3rd</option><option>4th</option><option>5th</option><option>6th</option><option>7th</option><option>8th</option></select></div>
         <button class="btn" id="studentViewSyllabusBtn">🔍 View Syllabus</button>
         <div id="studentViewMsg" class="msg-area"></div>
+        
         <hr>
-        <div id="studentSyllabusList" style="margin-top:15px;">
-          <h4>📚 Available Syllabus (All Branches)</h4>
-          <div id="studentSyllabusContainer" class="syllabus-grid"></div>
-        </div>
+        
+        <!-- Add Syllabus Section (Students can ADD but NOT DELETE) -->
+        <h3>➕ Add New Syllabus <span style="font-size:0.8rem; color:#10b981;">(Students can add)</span></h3>
+        <div class="info-box">📌 Students can contribute by adding new syllabus PDFs. Admin will review and manage deletions.</div>
+        <div class="form-group"><label>Branch *</label><select id="studentAddBranch"><option>CE</option><option>CS</option><option>IOT</option><option>EE</option><option>ECE</option><option>ME</option></select></div>
+        <div class="form-group"><label>Semester *</label><select id="studentAddSem"><option>1st</option><option>2nd</option><option>3rd</option><option>4th</option><option>5th</option><option>6th</option><option>7th</option><option>8th</option></select></div>
+        <div class="form-group"><label>Google Drive PDF Link *</label><input type="url" id="studentAddPdfUrl" placeholder="https://drive.google.com/file/d/.../preview"></div>
+        <button class="btn btn-success" id="studentAddSyllabusBtn">📤 Submit New Syllabus</button>
+        <div id="studentAddMsg" class="msg-area"></div>
+        
+        <hr>
+        
+        <!-- All Syllabus List (View Only - No Delete for Students) -->
+        <h4>📚 All Available Syllabus</h4>
+        <div id="studentSyllabusContainer" class="syllabus-grid"></div>
       </div>
     </div>
   </div>
 
-  <!-- ===================== ADMIN PANEL ===================== -->
+  <!-- ===================== ADMIN PANEL (Full Control) ===================== -->
   <div id="adminPanel" class="panel">
     <div class="card">
-      <h2>🛡️ Admin Console <span class="admin-badge">Google Auth Required</span></h2>
+      <h2>🛡️ Admin Console <span class="admin-badge">Full Control</span></h2>
       <div id="adminNotLogged">
         <div class="google-btn-wrapper" id="googleButtonContainer"></div>
         <div id="adminLoginMsg" class="msg-area"></div>
@@ -299,29 +359,31 @@
           <button id="adminLogoutBtn" class="btn btn-sm btn-danger">Sign Out</button>
         </div>
         <hr>
-        <!-- Tabs within Admin -->
-        <div style="display:flex; gap:10px; margin:15px 0;">
-          <button class="btn btn-sm" id="adminSyllabusTabBtn">📘 Manage Syllabus</button>
-          <button class="btn btn-sm" id="adminPendingTabBtn">⏳ Pending Approvals</button>
-          <button class="btn btn-sm" id="adminStudentsTabBtn">👥 Manage Students</button>
+        <div style="display:flex; gap:10px; margin:15px 0; flex-wrap:wrap;">
+          <button class="btn btn-sm btn-primary" id="adminSyllabusTabBtn">📘 Manage Syllabus</button>
+          <button class="btn btn-sm btn-warning" id="adminPendingTabBtn">⏳ Pending Approvals</button>
+          <button class="btn btn-sm btn-purple" id="adminStudentsTabBtn">👥 Manage Students</button>
         </div>
-        <!-- Manage Syllabus (Add/Edit/Delete) -->
+        
+        <!-- Manage Syllabus (Full CRUD) -->
         <div id="adminSyllabusSection">
           <h3>➕ Add New Syllabus</h3>
           <div class="form-group"><input type="text" id="newBranch" placeholder="Branch (CE/CS/EE/ECE/ME/IOT)"></div>
           <div class="form-group"><input type="text" id="newSemester" placeholder="Semester (1st, 2nd, 3rd...)"></div>
           <div class="form-group"><input type="url" id="newPdfUrl" placeholder="Google Drive PDF Link (preview URL)"></div>
           <button class="btn btn-success" id="addSyllabusBtn">➕ Add Syllabus</button>
-          <h3 style="margin-top:25px;">📚 Existing Syllabus (Click Delete to remove)</h3>
+          <h3 style="margin-top:25px;">📚 Existing Syllabus (Delete Available)</h3>
           <div id="adminSyllabusList" class="syllabus-grid"></div>
           <div id="adminSyllabusMsg" class="msg-area"></div>
         </div>
-        <!-- Pending Student Approvals -->
+        
+        <!-- Pending Approvals -->
         <div id="adminPendingSection" style="display:none;">
           <h3>⏳ Student Registration Requests</h3>
           <div id="pendingStudentsList" class="pending-list"></div>
         </div>
-        <!-- Manage Students (View/Delete) -->
+        
+        <!-- Manage Students -->
         <div id="adminStudentsSection" style="display:none;">
           <h3>👥 Registered & Approved Students</h3>
           <div id="allStudentsList" class="student-list"></div>
@@ -330,25 +392,23 @@
       </div>
     </div>
   </div>
-  <footer>© BEU Syllabus Manager • Student: view only • Admin: full CRUD + approve registrations</footer>
+  <footer>© BEU Syllabus Manager • Student: View & Add Only (No Delete) • Admin: Full CRUD + Approve Registrations</footer>
 </div>
 
 <!-- PDF MODAL -->
 <div id="pdfModal" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); display:none; justify-content:center; align-items:center; z-index:9999;">
   <div style="background:white; width:90%; max-width:1000px; height:85vh; border-radius:24px; display:flex; flex-direction:column;">
     <div style="padding:16px; background:#f1f5f9; border-radius:24px 24px 0 0; display:flex; justify-content:space-between;">
-      <strong>Syllabus PDF</strong>
-      <div><button id="closeModalBtn" style="background:#ef4444; padding:8px 16px; border:none; border-radius:40px; color:white;">Close</button></div>
+      <strong>Syllabus PDF Viewer</strong>
+      <div><button id="closeModalBtn" style="background:#ef4444; padding:8px 16px; border:none; border-radius:40px; cursor:pointer;">Close</button></div>
     </div>
     <iframe id="pdfFrame" style="flex:1; border:none;"></iframe>
   </div>
 </div>
 
 <script>
-  // ---------- DATA STORES ----------
-  // Syllabus Database: { branch, semester, pdfUrl, id }
+  // ========== DATA STORES ==========
   let syllabusData = JSON.parse(localStorage.getItem('beu_syllabus')) || [];
-  // Students: { id, fullName, email, password, regNo, branch, semester, telegram, approved (bool) }
   let students = JSON.parse(localStorage.getItem('beu_students')) || [];
   let currentStudent = null;
   let currentAdmin = null;
@@ -356,7 +416,6 @@
   function saveSyllabus() { localStorage.setItem('beu_syllabus', JSON.stringify(syllabusData)); }
   function saveStudents() { localStorage.setItem('beu_students', JSON.stringify(students)); }
 
-  // Helper: open PDF
   function openPdf(url) {
     if(!url) return;
     document.getElementById('pdfFrame').src = url;
@@ -367,7 +426,7 @@
     document.getElementById('pdfFrame').src = '';
   };
 
-  // ========== GUEST TIMER 80 SEC ==========
+  // ========== GUEST TIMER ==========
   let guestTime = 80;
   let guestInterval;
   function updateGuestUI() {
@@ -388,63 +447,121 @@
   updateGuestUI();
 
   document.getElementById('guestViewBtn').onclick = () => {
-    if(guestTime <= 0) { document.getElementById('guestMsgArea').innerText = "Session expired. Login required."; return; }
+    if(guestTime <= 0) { showGuestMsg("❌ Session expired. Login required.", "error"); return; }
     let branch = document.getElementById('guestBranch').value;
     let sem = document.getElementById('guestSem').value;
-    if(!branch || !sem) { document.getElementById('guestMsgArea').innerText = "Select branch & semester"; return; }
+    if(!branch || !sem) { showGuestMsg("⚠️ Select branch & semester", "error"); return; }
     let found = syllabusData.find(s => s.branch === branch && s.semester === sem);
-    if(found) { openPdf(found.pdfUrl); document.getElementById('guestMsgArea').innerText = "✅ PDF opened."; }
-    else document.getElementById('guestMsgArea').innerText = "❌ Syllabus not found for this selection.";
+    if(found) { openPdf(found.pdfUrl); showGuestMsg("✅ PDF opened.", "success"); }
+    else showGuestMsg("❌ Syllabus not found.", "error");
   };
+  function showGuestMsg(msg, type) {
+    let div = document.getElementById('guestMsgArea');
+    div.innerHTML = msg;
+    div.className = `msg-area ${type === 'success' ? 'msg-success' : 'msg-error'}`;
+    setTimeout(() => div.className = 'msg-area', 3000);
+  }
 
-  // ========== STUDENT LOGIC ==========
+  // ========== STUDENT LOGIC (View & Add Only - No Delete) ==========
   function renderStudentDashboard() {
     if(!currentStudent) return;
     document.getElementById('studentLoginForm').style.display = 'none';
     document.getElementById('studentRegisterForm').style.display = 'none';
     document.getElementById('studentDashboard').style.display = 'block';
-    document.getElementById('studentProfile').innerHTML = `<strong>${currentStudent.fullName}</strong> (${currentStudent.email}) | Reg: ${currentStudent.regNo} | ${currentStudent.branch} - ${currentStudent.semester}`;
-    // populate branch dropdown
+    document.getElementById('studentProfile').innerHTML = `<strong>${currentStudent.fullName}</strong> (${currentStudent.email})<br>Reg: ${currentStudent.regNo} | ${currentStudent.branch} - ${currentStudent.semester}`;
     let branchSelect = document.getElementById('studentViewBranch');
     branchSelect.innerHTML = '<option>CE</option><option>CS</option><option>IOT</option><option>EE</option><option>ECE</option><option>ME</option>';
     branchSelect.value = currentStudent.branch;
-    // Show all syllabus list (view only)
     displayStudentSyllabusList();
   }
+  
   function displayStudentSyllabusList() {
     const container = document.getElementById('studentSyllabusContainer');
     if(!container) return;
-    if(syllabusData.length === 0) { container.innerHTML = '<p>No syllabus uploaded yet.</p>'; return; }
+    if(syllabusData.length === 0) { container.innerHTML = '<p>No syllabus uploaded yet. Be the first to add!</p>'; return; }
+    // STUDENTS: View Only - No Delete Button!
     container.innerHTML = syllabusData.map((item, idx) => `
       <div class="syllabus-item">
-        <div class="syllabus-info"><strong>${item.branch} - ${item.semester}</strong><br><span style="font-size:0.75rem;">${item.pdfUrl.substring(0,50)}...</span></div>
-        <div class="action-buttons"><button class="btn btn-sm btn-primary view-syllabus-student" data-url="${item.pdfUrl}">View</button></div>
+        <div class="syllabus-info"><strong>${item.branch} - ${item.semester}</strong><br><span style="font-size:0.7rem; color:#64748b;">${item.pdfUrl.substring(0,60)}...</span></div>
+        <div class="action-buttons">
+          <button class="btn btn-sm btn-primary view-syllabus-student" data-url="${item.pdfUrl}">View</button>
+          <span style="font-size:0.7rem; color:#94a3b8;">(Read only)</span>
+        </div>
       </div>
     `).join('');
     document.querySelectorAll('.view-syllabus-student').forEach(btn => {
       btn.addEventListener('click', (e) => { openPdf(btn.dataset.url); });
     });
   }
+  
+  // Student View Syllabus
   document.getElementById('studentViewSyllabusBtn').onclick = () => {
     let branch = document.getElementById('studentViewBranch').value;
     let sem = document.getElementById('studentViewSem').value;
     let found = syllabusData.find(s => s.branch === branch && s.semester === sem);
     if(found) openPdf(found.pdfUrl);
-    else document.getElementById('studentViewMsg').innerText = "Syllabus not available.";
+    else document.getElementById('studentViewMsg').innerHTML = "<span style='color:red'>❌ Syllabus not available.</span>";
   };
-  // Student login
+  
+  // STUDENT ADD SYLLABUS (Can Add, Cannot Delete)
+  document.getElementById('studentAddSyllabusBtn').onclick = () => {
+    let branch = document.getElementById('studentAddBranch').value;
+    let sem = document.getElementById('studentAddSem').value;
+    let pdfUrl = document.getElementById('studentAddPdfUrl').value.trim();
+    
+    if(!branch || !sem || !pdfUrl) {
+      showStudentAddMsg("❌ Please fill all fields", "error");
+      return;
+    }
+    
+    // Check if already exists
+    if(syllabusData.some(s => s.branch === branch && s.semester === sem)) {
+      showStudentAddMsg("⚠️ Syllabus for this branch & semester already exists! You can view it above.", "error");
+      return;
+    }
+    
+    syllabusData.push({ branch, semester: sem, pdfUrl, id: Date.now(), addedBy: currentStudent.email });
+    saveSyllabus();
+    displayStudentSyllabusList();
+    showStudentAddMsg("✅ Syllabus added successfully! It's now available for all students.", "success");
+    document.getElementById('studentAddPdfUrl').value = '';
+  };
+  
+  function showStudentAddMsg(msg, type) {
+    let div = document.getElementById('studentAddMsg');
+    div.innerHTML = msg;
+    div.className = `msg-area ${type === 'success' ? 'msg-success' : 'msg-error'}`;
+    setTimeout(() => div.className = 'msg-area', 4000);
+  }
+  
+  // Student Login
   document.getElementById('studentLoginBtn').onclick = () => {
     let id = document.getElementById('studentLoginId').value.trim();
     let pwd = document.getElementById('studentLoginPass').value;
     let stud = students.find(s => (s.email === id || s.regNo === id) && s.password === pwd && s.approved === true);
-    if(stud) { currentStudent = stud; renderStudentDashboard(); document.getElementById('studentLoginMsg').innerText = ""; }
-    else document.getElementById('studentLoginMsg').innerHTML = "❌ Invalid credentials or account not approved by admin.";
+    if(stud) { 
+      currentStudent = stud; 
+      renderStudentDashboard(); 
+      document.getElementById('studentLoginMsg').innerHTML = "<span style='color:green'>✅ Login successful!</span>";
+    } else {
+      document.getElementById('studentLoginMsg').innerHTML = "<span style='color:red'>❌ Invalid credentials or account not approved by admin.</span>";
+    }
   };
+  
   document.getElementById('studentLogoutBtn').onclick = () => { currentStudent = null; location.reload(); };
-  // Show register form
-  document.getElementById('showRegisterLink').onclick = (e) => { e.preventDefault(); document.getElementById('studentLoginForm').style.display = 'none'; document.getElementById('studentRegisterForm').style.display = 'block'; };
-  document.getElementById('backToLoginBtn').onclick = () => { document.getElementById('studentLoginForm').style.display = 'block'; document.getElementById('studentRegisterForm').style.display = 'none'; };
-  // Register request (pending approval)
+  
+  document.getElementById('showRegisterLink').onclick = (e) => { 
+    e.preventDefault(); 
+    document.getElementById('studentLoginForm').style.display = 'none'; 
+    document.getElementById('studentRegisterForm').style.display = 'block'; 
+  };
+  document.getElementById('backToLoginBtn').onclick = () => { 
+    document.getElementById('studentLoginForm').style.display = 'block'; 
+    document.getElementById('studentRegisterForm').style.display = 'none'; 
+    document.getElementById('registerMsg').innerHTML = '';
+  };
+  
+  // Registration Submit
   document.getElementById('registerRequestBtn').onclick = () => {
     let fullName = document.getElementById('regFullName').value.trim();
     let email = document.getElementById('regEmail').value.trim();
@@ -453,80 +570,100 @@
     let branch = document.getElementById('regBranch').value;
     let sem = document.getElementById('regSem').value;
     let telegram = document.getElementById('regTelegram').value.trim();
-    if(!fullName || !email || !pwd || !regNo) { document.getElementById('registerMsg').innerHTML = "All fields required"; return; }
-    if(students.some(s => s.email === email || s.regNo === regNo)) { document.getElementById('registerMsg').innerHTML = "Email or RegNo already exists."; return; }
+    
+    if(!fullName || !email || !pwd || !regNo || !branch || !sem) {
+      showRegisterMsg("❌ All required fields must be filled", "error");
+      return;
+    }
+    if(pwd.length < 4) { showRegisterMsg("❌ Password must be at least 4 characters", "error"); return; }
+    if(students.some(s => s.email === email)) { showRegisterMsg("❌ Email already registered!", "error"); return; }
+    if(students.some(s => s.regNo === regNo)) { showRegisterMsg("❌ Registration number already exists!", "error"); return; }
+    
     let newStudent = { id: Date.now(), fullName, email, password: pwd, regNo, branch, semester: sem, telegram, approved: false };
     students.push(newStudent);
     saveStudents();
-    document.getElementById('registerMsg').innerHTML = "✅ Registration submitted! Await admin approval.";
+    showRegisterMsg("✅ Registration submitted! Wait for admin approval.", "success");
+    
+    document.getElementById('regFullName').value = '';
+    document.getElementById('regEmail').value = '';
+    document.getElementById('regPassword').value = '';
+    document.getElementById('regRegNo').value = '';
+    document.getElementById('regBranch').value = '';
+    document.getElementById('regSem').value = '';
+    document.getElementById('regTelegram').value = '';
+    
     setTimeout(() => { document.getElementById('backToLoginBtn').click(); }, 2000);
   };
+  
+  function showRegisterMsg(msg, type) {
+    let msgDiv = document.getElementById('registerMsg');
+    msgDiv.innerHTML = msg;
+    msgDiv.className = `msg-area ${type === 'success' ? 'msg-success' : 'msg-error'}`;
+    setTimeout(() => msgDiv.className = 'msg-area', 4000);
+  }
 
-  // ========== ADMIN PANEL (Google Login + Full Control) ==========
-  const ALLOWED_ADMINS = ["admin@beu.edu", "zafar@beu.edu", "mdzafar864@gmail.com"];
+  // ========== ADMIN PANEL (Full Control with Delete) ==========
   function initAdminGoogle() {
-    if(typeof google !== 'undefined') {
-      google.accounts.id.initialize({
-        client_id: 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com',
-        callback: (response) => { /* real implementation requires backend token verification; for demo we simulate */ }
-      });
-      google.accounts.id.renderButton(document.getElementById("googleButtonContainer"), { theme: "outline", size: "large" });
-    }
-    // Fallback simulation for demo (since no client ID)
     const container = document.getElementById("googleButtonContainer");
     container.innerHTML = '<button id="simulateAdminBtn" class="btn btn-purple">🔐 Simulate Admin Login (Demo)</button>';
     document.getElementById("simulateAdminBtn").onclick = () => {
       currentAdmin = { name: "Demo Admin", email: "admin@beu.edu" };
       document.getElementById('adminNotLogged').style.display = 'none';
       document.getElementById('adminLoggedArea').style.display = 'block';
-      document.getElementById('adminName').innerText = currentAdmin.name + " (Demo)";
+      document.getElementById('adminName').innerText = currentAdmin.name + " (Demo Mode)";
       renderAdminSyllabusList();
       renderPendingApprovals();
       renderAllStudentsList();
     };
   }
+  
   function renderAdminSyllabusList() {
     const container = document.getElementById('adminSyllabusList');
     if(!container) return;
     if(syllabusData.length === 0) { container.innerHTML = "<p>No syllabus added.</p>"; return; }
+    // ADMIN: Has Delete Button
     container.innerHTML = syllabusData.map((item, idx) => `
       <div class="syllabus-item">
-        <div><strong>${item.branch} - ${item.semester}</strong><br><small>${item.pdfUrl.substring(0,60)}</small></div>
+        <div><strong>${item.branch} - ${item.semester}</strong><br><small>${item.pdfUrl.substring(0,60)}</small><br><span style="font-size:0.7rem;">Added by: ${item.addedBy || 'Admin'}</span></div>
         <div class="action-buttons">
-          <button class="btn btn-sm btn-danger delete-syllabus" data-idx="${idx}">Delete</button>
+          <button class="btn btn-sm btn-danger delete-syllabus" data-idx="${idx}">🗑️ Delete</button>
         </div>
       </div>
     `).join('');
     document.querySelectorAll('.delete-syllabus').forEach(btn => {
       btn.addEventListener('click', (e) => {
         let idx = parseInt(btn.dataset.idx);
-        if(confirm("Delete this syllabus?")) { syllabusData.splice(idx,1); saveSyllabus(); renderAdminSyllabusList(); renderStudentSyllabusListForAll(); document.getElementById('adminSyllabusMsg').innerText = "Deleted."; }
+        if(confirm("Delete this syllabus permanently?")) { 
+          syllabusData.splice(idx,1); 
+          saveSyllabus(); 
+          renderAdminSyllabusList(); 
+          displayStudentSyllabusList();
+        }
       });
     });
   }
-  function renderStudentSyllabusListForAll() {
-    if(document.getElementById('studentSyllabusContainer')) displayStudentSyllabusList();
-  }
+  
   document.getElementById('addSyllabusBtn').onclick = () => {
     let branch = document.getElementById('newBranch').value.trim();
     let sem = document.getElementById('newSemester').value.trim();
     let url = document.getElementById('newPdfUrl').value.trim();
-    if(!branch || !sem || !url) { document.getElementById('adminSyllabusMsg').innerText = "All fields required"; return; }
-    syllabusData.push({ branch, semester: sem, pdfUrl: url, id: Date.now() });
+    if(!branch || !sem || !url) { document.getElementById('adminSyllabusMsg').innerHTML = "<span style='color:red'>All fields required</span>"; return; }
+    syllabusData.push({ branch, semester: sem, pdfUrl: url, id: Date.now(), addedBy: 'Admin' });
     saveSyllabus();
     renderAdminSyllabusList();
     displayStudentSyllabusList();
-    document.getElementById('adminSyllabusMsg').innerText = "✅ Syllabus added successfully!";
+    document.getElementById('adminSyllabusMsg').innerHTML = "<span style='color:green'>✅ Syllabus added!</span>";
     document.getElementById('newBranch').value = ''; document.getElementById('newSemester').value = ''; document.getElementById('newPdfUrl').value = '';
+    setTimeout(() => document.getElementById('adminSyllabusMsg').innerHTML = '', 3000);
   };
-  // Pending approvals
+  
   function renderPendingApprovals() {
     const pending = students.filter(s => !s.approved);
     const container = document.getElementById('pendingStudentsList');
-    if(pending.length === 0) { container.innerHTML = "<p>No pending registrations.</p>"; return; }
+    if(pending.length === 0) { container.innerHTML = "<p>✅ No pending registrations.</p>"; return; }
     container.innerHTML = pending.map(s => `
       <div class="pending-item">
-        <div><strong>${s.fullName}</strong> (${s.email})<br>Reg: ${s.regNo} | ${s.branch} - ${s.semester} | Telegram: ${s.telegram || 'N/A'}</div>
+        <div><strong>${s.fullName}</strong> (${s.email})<br>Reg: ${s.regNo} | ${s.branch} - ${s.semester}</div>
         <div class="action-buttons">
           <button class="btn btn-sm btn-success approve-student" data-id="${s.id}">✅ Approve</button>
           <button class="btn btn-sm btn-danger reject-student" data-id="${s.id}">❌ Reject</button>
@@ -534,23 +671,23 @@
       </div>
     `).join('');
     document.querySelectorAll('.approve-student').forEach(btn => {
-      btn.addEventListener('click', (e) => {
+      btn.addEventListener('click', () => {
         let id = parseInt(btn.dataset.id);
         let student = students.find(s => s.id === id);
-        if(student) { student.approved = true; saveStudents(); renderPendingApprovals(); renderAllStudentsList(); document.getElementById('adminSyllabusMsg').innerText = `✅ ${student.fullName} approved.`; }
+        if(student) { student.approved = true; saveStudents(); renderPendingApprovals(); renderAllStudentsList(); }
       });
     });
     document.querySelectorAll('.reject-student').forEach(btn => {
-      btn.addEventListener('click', (e) => {
+      btn.addEventListener('click', () => {
         let id = parseInt(btn.dataset.id);
         students = students.filter(s => s.id !== id);
         saveStudents();
         renderPendingApprovals();
         renderAllStudentsList();
-        document.getElementById('adminSyllabusMsg').innerText = "Student request removed.";
       });
     });
   }
+  
   function renderAllStudentsList() {
     const approved = students.filter(s => s.approved === true);
     const container = document.getElementById('allStudentsList');
@@ -562,13 +699,13 @@
       </div>
     `).join('');
     document.querySelectorAll('.delete-student-admin').forEach(btn => {
-      btn.addEventListener('click', (e) => {
+      btn.addEventListener('click', () => {
         let id = parseInt(btn.dataset.id);
-        if(confirm("Delete this student account?")) { students = students.filter(s => s.id !== id); saveStudents(); renderAllStudentsList(); renderPendingApprovals(); document.getElementById('adminStudentMsg').innerText = "Student removed."; }
+        if(confirm("Delete this student account?")) { students = students.filter(s => s.id !== id); saveStudents(); renderAllStudentsList(); renderPendingApprovals(); }
       });
     });
   }
-  // Admin UI tabs
+  
   document.getElementById('adminSyllabusTabBtn').onclick = () => { document.getElementById('adminSyllabusSection').style.display = 'block'; document.getElementById('adminPendingSection').style.display = 'none'; document.getElementById('adminStudentsSection').style.display = 'none'; renderAdminSyllabusList(); };
   document.getElementById('adminPendingTabBtn').onclick = () => { document.getElementById('adminSyllabusSection').style.display = 'none'; document.getElementById('adminPendingSection').style.display = 'block'; document.getElementById('adminStudentsSection').style.display = 'none'; renderPendingApprovals(); };
   document.getElementById('adminStudentsTabBtn').onclick = () => { document.getElementById('adminSyllabusSection').style.display = 'none'; document.getElementById('adminPendingSection').style.display = 'none'; document.getElementById('adminStudentsSection').style.display = 'block'; renderAllStudentsList(); };
@@ -584,19 +721,19 @@
     if(role === 'student') document.querySelector('.role-btn.student').classList.add('active');
     if(role === 'admin') document.querySelector('.role-btn.admin').classList.add('active');
     if(role === 'student' && currentStudent) renderStudentDashboard();
-    if(role === 'admin' && currentAdmin) { document.getElementById('adminNotLogged').style.display = 'none'; document.getElementById('adminLoggedArea').style.display = 'block'; renderAdminSyllabusList(); }
   };
-  // initial data seeding demo syllabus if empty
+  
+  // Initial data seeding
   if(syllabusData.length === 0) {
-    syllabusData.push({ branch:"CS", semester:"3rd", pdfUrl:"https://drive.google.com/file/d/1Zp-UAEgj72UstczPS_wSIBtlPU48USal/preview", id:1 });
-    syllabusData.push({ branch:"CE", semester:"4th", pdfUrl:"https://drive.google.com/file/d/17w5zTFNaWUOg7S_vUrqW_AxtMyf7bPdU/preview", id:2 });
+    syllabusData.push({ branch:"CS", semester:"3rd", pdfUrl:"https://drive.google.com/file/d/1Zp-UAEgj72UstczPS_wSIBtlPU48USal/preview", id:1, addedBy:"System" });
+    syllabusData.push({ branch:"CE", semester:"4th", pdfUrl:"https://drive.google.com/file/d/17w5zTFNaWUOg7S_vUrqW_AxtMyf7bPdU/preview", id:2, addedBy:"System" });
     saveSyllabus();
   }
   if(students.length === 0) {
-    students.push({ id:1, fullName:"John Doe", email:"student@beu.edu", password:"1234", regNo:"2024CS001", branch:"CS", semester:"3rd", telegram:"@john", approved:true });
+    students.push({ id:1, fullName:"Demo Student", email:"student@beu.edu", password:"1234", regNo:"2024CS001", branch:"CS", semester:"3rd", telegram:"@demo", approved:true });
     saveStudents();
   }
-  // For guest view - show available
 </script>
 </body>
 </html>
+```
