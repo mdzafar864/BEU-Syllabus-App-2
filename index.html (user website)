@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BEU Syllabus</title>
+
+<!-- SEO -->
+<meta name="description" content="BEU Syllabus Viewer">
+<link rel="icon" href="https://raw.githubusercontent.com/mdzafar864/BEU-Syllabus-App/main/favicon.ico">
+
+<!-- CSS -->
+<link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+<div class="box">
+    <img id="logo" src="https://raw.githubusercontent.com/mdzafar864/BEU-Syllabus-App/main/logo.png">
+
+    <h2>BEU Syllabus</h2>
+
+    <select id="branch">
+        <option value="">Select Branch</option>
+        <option value="CE">Civil Engineering</option>
+        <option value="CS">CSE</option>
+        <option value="IOT">CSE (IOT)</option>
+        <option value="EE">EE</option>
+        <option value="ECE">ECE</option>
+        <option value="ME">ME</option>
+    </select>
+
+    <select id="sem">
+        <option value="">Select Semester</option>
+        <option value="1stNew">1st New</option>
+        <option value="1stOld">1st Old</option>
+        <option value="2ndNew">2nd New</option>
+        <option value="2ndOld">2nd Old</option>
+        <option value="3rdNew">3rd New</option>
+        <option value="3rdOld">3rd Old</option>
+        <option value="4th">4th</option>
+        <option value="5th">5th</option>
+        <option value="6th">6th</option>
+        <option value="7th">7th</option>
+        <option value="8th">8th</option>
+    </select>
+
+    <button id="openBtn">Open Syllabus</button>
+
+    <div id="msg">Choose branch & semester to view syllabus.</div>
+
+    <button id="devBtn">Developer Info</button>
+</div>
+
+<!-- Developer Modal -->
+<div class="modal" id="devModal">
+    <div class="modal-box">
+        <div class="modal-top">
+            <strong>About Developer</strong>
+            <button class="close-btn" onclick="closeDev()">Close</button>
+        </div>
+
+        <div class="content">
+            <img src="https://raw.githubusercontent.com/mdzafar864/BEU-Syllabus-App/main/Developer%20(2).png" class="dev-img">
+            <h3>Md Zafar</h3>
+            <p>Full Stack Developer</p>
+        </div>
+    </div>
+</div>
+
+<!-- PDF Modal -->
+<div class="modal" id="pdfModal">
+    <div class="modal-box">
+        <div class="modal-top">
+            <strong>Syllabus PDF</strong>
+            <div>
+                <button class="close-btn" onclick="closePDF()">Close</button>
+                <button class="close-btn" id="downloadPDFBtn">Download</button>
+            </div>
+        </div>
+        <iframe id="pdfFrame"></iframe>
+    </div>
+</div>
+
+<!-- JS -->
+<script src="script.js"></script>
+
+</body>
+</html>
