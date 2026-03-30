@@ -1,700 +1,714 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
+    <!-- Google Verification Code -->
     <meta name="google-site-verification" content="o4SUX7ZbxE9gI4_-edZ2Wxp_cFjMwllnNxnvU72gkbE">
-    <meta name="description" content="BEU Syllabus Viewer – Fast and easy access to BEU engineering syllabus for all branches and semesters. Admin panel for direct PDF management.">
+
+    <!-- BASIC SEO -->
+    <meta name="description" content="BEU Syllabus Viewer – Fast and easy access to BEU engineering syllabus for all branches and semesters. Fully responsive, clean and mobile-friendly with admin dashboard.">
+
+    <!-- KEYWORDS (1st to 8th Semester + Branch-wise) -->
+    <meta name="keywords" content="
+    BEU syllabus,
+    BEU syllabus PDF,
+    BEU engineering syllabus,
+    BEU 1st semester syllabus,
+    BEU 2nd semester syllabus,
+    BEU 3rd semester syllabus,
+    BEU 4th semester syllabus,
+    BEU 5th semester syllabus,
+    BEU 6th semester syllabus,
+    BEU 7th semester syllabus,
+    BEU 8th semester syllabus,
+    CSE BEU syllabus,
+    Mechanical BEU syllabus,
+    Civil BEU syllabus,
+    Electrical BEU syllabus,
+    ECE BEU syllabus,
+    BEU semester wise syllabus,
+    BEU syllabus viewer,
+    Bihar Engineering University syllabus
+    ">
+
     <meta name="author" content="Md Zafar">
+
+    <!-- Search Engine Settings -->
+    <meta name="robots" content="index, follow">
+    <meta name="googlebot" content="index, follow">
+    <meta name="bingbot" content="index, follow">
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://mdzafar864.github.io/BEU-Syllabus-App/">
+
+    <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="https://raw.githubusercontent.com/mdzafar864/BEU-Syllabus-App/main/favicon.ico">
-    <title>BEU Syllabus | Admin + PDF Manager</title>
+
+    <!-- Correct PWA Paths -->
+    <link rel="manifest" href="/BEU-Syllabus-App/manifest.json">
+
+    <script>
+        // Service Worker Registration
+        if ("serviceWorker" in navigator) {
+            navigator.serviceWorker.register("/BEU-Syllabus-App/service-worker.js")
+                .then(registration => {
+                    console.log("[SW] Service Worker Registered");
+                    registration.onupdatefound = () => {
+                        const newWorker = registration.installing;
+                        newWorker.onstatechange = () => {
+                            if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+                                if (confirm("A new version of the app is available. Would you like to update now?")) {
+                                    newWorker.postMessage("skipWaiting");
+                                    window.location.reload();
+                                }
+                            }
+                        };
+                    };
+                })
+                .catch(err => console.log("[SW] Registration failed:", err));
+
+            navigator.serviceWorker.addEventListener("message", event => {
+                if (event.data === "skipWaiting") {
+                    window.location.reload();
+                }
+            });
+        }
+    </script>
+    
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>BEU Syllabus + Admin Dashboard</title>
+    <meta name="theme-color" content="#0066ff">
+
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{
+            font-family:Arial, sans-serif;
+            background:#f4f4f4;
+            padding:15px;
+            width:100%;
+            max-width:900px;
+            margin:auto;
         }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
+        /* MAIN BOX */
+        .box{
+            width:100%;
+            background:white;
+            padding:25px;
+            border-radius:14px;
+            margin-top:25px;
+            box-shadow:0 6px 25px rgba(0,0,0,0.10);
         }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
+        /* LOGO */
+        #logo{
+            width:140px;
+            height:140px;
+            object-fit:cover;
+            border-radius:20px;
+            display:block;
+            margin:0 auto 10px auto;
+            box-shadow:0 5px 15px rgba(0,0,0,0.15);
         }
 
-        /* TABS */
-        .tabs {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 25px;
-            justify-content: center;
-            flex-wrap: wrap;
+        /* TEXT */
+        h2{text-align:center;margin:10px 0 25px;font-size:26px;}
+
+        /* SELECT + BUTTON */
+        select,button{
+            width:100%;
+            padding:15px;
+            margin-top:12px;
+            font-size:18px;
+            border-radius:10px;
+            border:1px solid #ccc;
         }
 
-        .tab-btn {
-            background: white;
-            border: none;
-            padding: 14px 32px;
-            font-size: 1rem;
-            font-weight: 600;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            color: #333;
+        button{
+            background:#0066ff;
+            color:white;
+            font-weight:600;
+            cursor:pointer;
+            transition:0.2s;
+        }
+        button:hover{opacity:0.9;}
+
+        #devBtn{background:#444;}
+
+        /* MESSAGE BOX */
+        #msg{
+            margin-top:15px;
+            background:#eef5ff;
+            padding:15px;
+            border-left:4px solid #0066ff;
+            font-size:16px;
+            display:block;
+            transition:opacity .3s ease;
         }
 
-        .tab-btn.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(102,126,234,0.4);
+        /* MODAL BASE */
+        .modal{
+            position:fixed;
+            inset:0;
+            background:rgba(0,0,0,0.6);
+            display:none;
+            justify-content:center;
+            align-items:center;
+            padding:15px;
+            z-index:9999;
         }
 
-        .panel {
-            display: none;
-            animation: fadeIn 0.4s ease;
+        .modal-box{
+            width:100%;
+            max-width:1000px;
+            height:90vh;
+            background:white;
+            border-radius:14px;
+            display:flex;
+            flex-direction:column;
+            animation:popup .35s ease;
         }
 
-        .panel.active-panel {
-            display: block;
+        @keyframes popup{
+            from{transform:scale(0.95);opacity:0;}
+            to{transform:scale(1);opacity:1;}
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px);}
-            to { opacity: 1; transform: translateY(0);}
+        .modal-top{
+            padding:14px;
+            background:#f1f5f9;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            font-size:18px;
+            flex-wrap:wrap;
+            gap:10px;
         }
 
-        /* cards & boxes */
-        .box {
-            background: white;
-            border-radius: 25px;
-            padding: 30px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
-            margin-bottom: 25px;
+        .modal-top .btn-group{
+            display:flex;
+            gap:10px;
         }
 
-        h2 {
-            font-size: 28px;
-            margin-bottom: 25px;
-            text-align: center;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+        iframe{
+            flex:1;
+            border:0;
+            width:100%;
         }
 
-        h3 {
-            color: #333;
-            margin: 20px 0 15px;
-            font-size: 20px;
+        /* CLOSE + DOWNLOAD BUTTONS */
+        .close-btn{
+            background:#ff3333;
+            color:white;
+            padding:10px 18px;
+            border:none;
+            border-radius:8px;
+            cursor:pointer;
+        }
+        #downloadPDFBtn{
+            background:#0066ff;
         }
 
-        select, input, textarea {
-            width: 100%;
-            padding: 14px 18px;
-            margin-top: 12px;
-            font-size: 15px;
-            border-radius: 15px;
-            border: 2px solid #e0e0e0;
-            background: white;
-            font-family: inherit;
-            transition: all 0.3s ease;
+        /* ADMIN DASHBOARD STYLES (inside dev modal) */
+        .admin-dashboard{
+            padding:20px;
+            background:#f8fafc;
+            border-radius:16px;
+            margin:20px 0;
+            border:1px solid #e2e8f0;
         }
-
-        select:focus, input:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+        .admin-dashboard h4{
+            font-size:20px;
+            margin-bottom:15px;
+            color:#0f172a;
+            border-left:4px solid #0066ff;
+            padding-left:12px;
         }
-
-        button {
-            width: 100%;
-            padding: 14px 20px;
-            margin-top: 12px;
-            font-size: 16px;
-            font-weight: 600;
-            border-radius: 15px;
-            border: none;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+        .admin-form-group{
+            margin-bottom:20px;
         }
-
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(102,126,234,0.3);
+        .admin-form-group label{
+            display:block;
+            font-weight:600;
+            margin-bottom:6px;
+            color:#1e293b;
         }
-
-        .danger-btn {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        .admin-form-group select, 
+        .admin-form-group input{
+            width:100%;
+            padding:12px;
+            border:1px solid #cbd5e1;
+            border-radius:10px;
+            font-size:15px;
         }
-
-        .secondary-btn {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        .admin-upload-btn{
+            background:#0066ff;
+            color:white;
+            padding:12px 20px;
+            border:none;
+            border-radius:40px;
+            font-weight:bold;
+            cursor:pointer;
+            width:100%;
+            font-size:16px;
+            margin-top:5px;
         }
-
-        #msg, #adminMsg {
-            margin-top: 20px;
-            padding: 14px 18px;
-            border-radius: 15px;
-            font-size: 14px;
-            transition: all 0.3s ease;
+        .admin-status{
+            margin-top:15px;
+            padding:10px;
+            border-radius:8px;
+            font-size:14px;
+            background:#e6f7e6;
+            color:#2e7d32;
+            display:none;
         }
-
-        /* ADMIN TABLE */
-        .admin-table-wrap {
-            overflow-x: auto;
-            margin: 20px 0;
-            border-radius: 15px;
-            background: #f8f9fa;
+        .admin-status.error{
+            background:#ffe6e6;
+            color:#c62828;
         }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
+        hr{
+            margin:20px 0;
         }
-
-        th, td {
-            padding: 14px 12px;
-            text-align: left;
-            border-bottom: 1px solid #e0e0e0;
-            font-size: 13px;
+        .current-preview{
+            background:#ffffff;
+            padding:12px;
+            border-radius:12px;
+            font-size:14px;
+            border:1px dashed #94a3b8;
+            word-break:break-all;
         }
-
-        th {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            font-weight: 600;
+        .small-note{
+            font-size:12px;
+            color:#475569;
+            margin-top:5px;
         }
-
-        .edit-link, .del-link {
-            padding: 6px 14px;
-            border-radius: 20px;
-            color: white;
-            text-decoration: none;
-            font-size: 12px;
-            cursor: pointer;
-            display: inline-block;
-            margin: 0 4px;
-            border: none;
-            width: auto;
+        @media (min-width:900px){
+            body{padding:30px;}
+            .box{padding:35px;}
+            h2{font-size:30px;}
         }
-
-        .edit-link {
-            background: #ff9800;
-        }
-
-        .del-link {
-            background: #f44336;
-        }
-
-        .badge {
-            background: #e3f2fd;
-            color: #1976d2;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: bold;
-            display: inline-block;
-        }
-
-        /* MODAL */
-        .modal {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.8);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 10000;
-            padding: 20px;
-            animation: fadeIn 0.3s ease;
-        }
-        
-        .modal-box {
-            background: white;
-            width: 100%;
-            max-width: 900px;
-            max-height: 90vh;
-            border-radius: 25px;
-            overflow: hidden;
-            animation: slideUp 0.3s ease;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        @keyframes slideUp {
-            from { transform: translateY(50px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-        
-        .modal-top {
-            padding: 18px 24px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            color: white;
-        }
-        
-        .modal-content {
-            padding: 24px;
-            overflow-y: auto;
-            flex: 1;
-        }
-        
-        .close-modal {
-            background: rgba(255,255,255,0.2);
-            padding: 8px 20px;
-            border: none;
-            border-radius: 25px;
-            color: white;
-            cursor: pointer;
-            font-weight: 600;
-        }
-        
-        .close-modal:hover {
-            background: rgba(255,255,255,0.3);
-        }
-        
-        iframe {
-            width: 100%;
-            height: 70vh;
-            border: none;
-        }
-
-        .logo {
-            width: 100px;
-            height: 100px;
-            object-fit: cover;
-            border-radius: 25px;
-            display: block;
-            margin: 0 auto 15px auto;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-        }
-        
-        .flex-row {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-            margin-top: 12px;
-        }
-        
-        .flex-row select, .flex-row button {
-            flex: 1;
-            margin-top: 0;
-        }
-        
-        footer {
-            text-align: center;
-            padding: 30px 10px 20px;
-            font-size: 13px;
-            color: white;
-            opacity: 0.9;
-        }
-        
-        a:link, a:visited { color: #667eea; text-decoration: none; }
-        a:hover { color: #764ba2; text-decoration: underline; }
-        
-        @media (max-width: 768px) {
-            .box { padding: 20px; }
-            h2 { font-size: 22px; }
-            th, td { font-size: 11px; padding: 8px; }
-        }
+        a:link { color: #0066ff; }
+        a:visited { color: #0066ff; }
+        a:hover { color: #FF0000; }
+        a:active { color: #FF0000; }
     </style>
 </head>
+
 <body>
-<div class="container">
-    <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('viewer')">📘 Syllabus Viewer</button>
-        <button class="tab-btn" onclick="switchTab('admin')">🔐 Admin Panel (Manage PDFs)</button>
-    </div>
 
-    <!-- VIEWER PANEL -->
-    <div id="viewerPanel" class="panel active-panel">
-        <div class="box">
-            <img class="logo" loading="lazy" src="https://raw.githubusercontent.com/mdzafar864/BEU-Syllabus-App/main/logo.png" alt="BEU Logo" onerror="this.src='https://via.placeholder.com/100?text=BEU'">
-            <h2>📖 BEU Syllabus Viewer</h2>
-            <select id="branch">
-                <option value="">-- Select Branch --</option>
-                <option value="CE">Civil Engineering (CE)</option>
-                <option value="CS">Computer Science & Engineering (CSE)</option>
-                <option value="IOT">CSE (IOT)</option>
-                <option value="EE">Electrical Engineering (EE)</option>
-                <option value="ECE">Electronics & Communication (ECE)</option>
-                <option value="ME">Mechanical Engineering (ME)</option>
-            </select>
+<div class="box">
+    <img id="logo" loading="lazy" src="https://raw.githubusercontent.com/mdzafar864/BEU-Syllabus-App/main/logo.png" alt="BEU Logo">
 
-            <select id="sem">
-                <option value="">-- Select Semester --</option>
-                <option value="1stNew">1st Semester (New)</option>
-                <option value="1stOld">1st Semester (Old)</option>
-                <option value="2ndNew">2nd Semester (New)</option>
-                <option value="2ndOld">2nd Semester (Old)</option>
-                <option value="3rdNew">3rd Semester (New)</option>
-                <option value="3rdOld">3rd Semester (Old)</option>
-                <option value="4th">4th Semester</option>
-                <option value="5th">5th Semester</option>
-                <option value="6th">6th Semester</option>
-                <option value="7th">7th Semester</option>
-                <option value="8th">8th Semester</option>
-            </select>
+    <h2>BEU Syllabus</h2>
 
-            <button id="openBtn">🔍 Open Syllabus</button>
-            <div id="msg" style="background:#e8f0fe;">✅ Choose branch & semester to view syllabus.</div>
-            <button id="devBtn" class="secondary-btn">👨‍💻 Developer Info</button>
+    <select id="branch">
+        <option value="">Select Branch</option>
+        <option value="CE">Civil Engineering (CE)</option>
+        <option value="CS">Computer Science and Engineering (CSE)</option>
+        <option value="IOT">Computer Science and Engineering (IOT)</option>
+        <option value="EE">Electrical Engineering (EE)</option>
+        <option value="ECE">Electronic and Communication Engineering (ECE)</option>
+        <option value="ME">Mechanical Engineering (ME)</option>
+    </select>
+
+    <select id="sem">
+        <option value="">Select Semester</option>
+        <option value="1stNew">1st Semester (New)</option>
+        <option value="1stOld">1st Semester (Old)</option>
+        <option value="2ndNew">2nd Semester (New)</option>
+        <option value="2ndOld">2nd Semester (Old)</option>
+        <option value="3rdNew">3rd Semester (New)</option>
+        <option value="3rdOld">3rd Semester (Old)</option>
+        <option value="4th">4th Semester</option>
+        <option value="5th">5th Semester</option>
+        <option value="6th">6th Semester</option>
+        <option value="7th">7th Semester</option>
+        <option value="8th">8th Semester</option>
+    </select>
+
+    <button id="openBtn">Open Syllabus</button>
+
+    <div id="msg">Choose branch & semester to view syllabus.</div>
+
+    <button id="devBtn">🔧 Developer Info + Admin Dashboard</button>
+</div>
+
+<!-- DEVELOPER MODAL (with integrated admin dashboard) -->
+<div class="modal" id="devModal">
+    <div class="modal-box">
+        <div class="modal-top">
+            <strong>👨‍💻 Developer Area & Admin Dashboard</strong>
+            <button class="close-btn" onclick="closeDev()">Close</button>
+        </div>
+
+        <div style="padding:25px;font-size:17px;line-height:1.7;color:#1e293b;overflow-y:auto;">
+            <div style="width:140px;height:140px;border-radius:50%;background:white;padding:8px;margin:0 auto 15px auto;box-shadow:0 4px 18px rgba(0,0,0,0.22);display:flex;justify-content:center;align-items:center;">
+                <img loading="lazy" src="https://raw.githubusercontent.com/mdzafar864/BEU-Syllabus-App/main/Developer%20(2).png"
+                     style="width:100%;height:100%;object-fit:contain;border-radius:50%;" alt="Developer">
+            </div>
+
+            <h3 style="text-align:center;">Md Zafar</h3>
+            <p style="text-align:center;">Full-Stack Developer • UI/UX Designer • PWA Specialist</p>
+
+            <p><b>Email:</b> <a href="mailto:mdzafarsabour35@gmail.com">mdzafarsabour35@gmail.com</a></p>
+            <p><b>LinkedIn:</b> <a href="https://www.linkedin.com/in/mdzafar864" target="_blank" rel="noopener">View Profile</a></p>
+            <p><b>Version:</b> 2.0 (Admin Dashboard Integrated)</p>
+
+            <div style="margin-top:18px; text-align:center;">
+                <a href="https://youtube.com/@engineers_pathway?si=27Bq_FHXS2vm_Xi0"
+                   target="_blank"
+                   rel="noopener"
+                   style="display:inline-flex;align-items:center;justify-content:center;background:#ff0000;color:white;padding:12px 22px;border-radius:10px;font-weight:600;text-decoration:none;box-shadow:0 6px 18px rgba(0,0,0,0.15);transition:0.3s;min-width:220px;">
+                   ▶ Visit My YouTube Channel
+                </a>
+            </div>
+
+            <hr>
+
+            <!-- ========== ADMIN DASHBOARD ========== -->
+            <div class="admin-dashboard">
+                <h4>📂 Admin Dashboard — Direct PDF Upload</h4>
+                <p style="margin-bottom:12px; font-size:14px;">Update syllabus PDF links instantly. Changes reflect immediately for all users.</p>
+                
+                <div class="admin-form-group">
+                    <label>📘 Select Branch</label>
+                    <select id="adminBranch">
+                        <option value="CE">Civil Engineering (CE)</option>
+                        <option value="CS">Computer Science (CSE)</option>
+                        <option value="IOT">CSE (IOT)</option>
+                        <option value="EE">Electrical Engineering (EE)</option>
+                        <option value="ECE">Electronics & Comm (ECE)</option>
+                        <option value="ME">Mechanical Engineering (ME)</option>
+                    </select>
+                </div>
+
+                <div class="admin-form-group">
+                    <label>📚 Select Semester</label>
+                    <select id="adminSem">
+                        <option value="1stNew">1st Semester (New)</option>
+                        <option value="1stOld">1st Semester (Old)</option>
+                        <option value="2ndNew">2nd Semester (New)</option>
+                        <option value="2ndOld">2nd Semester (Old)</option>
+                        <option value="3rdNew">3rd Semester (New)</option>
+                        <option value="3rdOld">3rd Semester (Old)</option>
+                        <option value="4th">4th Semester</option>
+                        <option value="5th">5th Semester</option>
+                        <option value="6th">6th Semester</option>
+                        <option value="7th">7th Semester</option>
+                        <option value="8th">8th Semester</option>
+                    </select>
+                </div>
+
+                <div class="admin-form-group">
+                    <label>🔗 Google Drive PDF Link (Preview URL)</label>
+                    <input type="text" id="pdfLinkInput" placeholder="Paste full /preview link from Google Drive" value="">
+                    <div class="small-note">* Use format: https://drive.google.com/file/d/XXXX/preview  (or any direct PDF preview link)</div>
+                </div>
+
+                <button id="uploadPdfBtn" class="admin-upload-btn">⬆️ Upload / Update Syllabus PDF</button>
+                
+                <div id="adminStatusMsg" class="admin-status"></div>
+
+                <div class="current-preview" id="currentPreviewBlock">
+                    <strong>📄 Current PDF URL:</strong> <span id="currentUrlDisplay">None</span>
+                </div>
+                <div class="small-note" style="margin-top:10px;">✅ Changes stored in browser local storage. Data persists across sessions. All users with access to this device can update.</div>
+                <div class="small-note">💡 Tip: To get preview link, open any Google Drive PDF → click "..." → "Open in new window" → copy URL containing /preview.</div>
+            </div>
+            <hr>
+            <p>This application provides fast access to BEU syllabus. Fully responsive, lightweight and PWA ready with admin override.</p>
         </div>
     </div>
-
-    <!-- ADMIN PANEL -->
-    <div id="adminPanel" class="panel">
-        <div class="box">
-            <h2>⚙️ Admin Dashboard — Direct PDF Management</h2>
-            <p style="margin-bottom: 15px; color: #666;">Add/Update PDF links for any (Semester, Branch). Supports Google Drive embed links or direct PDF URLs.</p>
-            
-            <div class="flex-row">
-                <select id="adminSem">
-                    <option value="">-- Semester --</option>
-                    <option value="1stNew">1st Semester (New)</option>
-                    <option value="1stOld">1st Semester (Old)</option>
-                    <option value="2ndNew">2nd Semester (New)</option>
-                    <option value="2ndOld">2nd Semester (Old)</option>
-                    <option value="3rdNew">3rd Semester (New)</option>
-                    <option value="3rdOld">3rd Semester (Old)</option>
-                    <option value="4th">4th Semester</option>
-                    <option value="5th">5th Semester</option>
-                    <option value="6th">6th Semester</option>
-                    <option value="7th">7th Semester</option>
-                    <option value="8th">8th Semester</option>
-                </select>
-                <select id="adminBranch">
-                    <option value="">-- Branch --</option>
-                    <option value="CE">Civil (CE)</option>
-                    <option value="CS">CSE</option>
-                    <option value="IOT">CSE (IOT)</option>
-                    <option value="EE">Electrical (EE)</option>
-                    <option value="ECE">ECE</option>
-                    <option value="ME">Mechanical (ME)</option>
-                </select>
-            </div>
-            
-            <input type="text" id="pdfUrlInput" placeholder="Paste PDF Embed Link (Google Drive preview link or direct PDF URL)">
-            <div class="flex-row">
-                <button id="savePdfBtn">💾 Save / Update PDF</button>
-                <button id="deletePdfBtn" class="danger-btn">🗑️ Delete PDF Entry</button>
-            </div>
-            <div id="adminMsg"></div>
-            
-            <hr style="margin: 25px 0;">
-            <h3>📋 Current Syllabus Database</h3>
-            <div class="admin-table-wrap">
-                <table>
-                    <thead>
-                        <tr><th>Semester</th><th>Branch</th><th>PDF Link</th><th style="width:120px">Actions</th></tr>
-                    </thead>
-                    <tbody id="tableBody"></tbody>
-                </table>
-            </div>
-            <button id="resetDefaultBtn" class="danger-btn" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">↻ Reset to Default Syllabus</button>
-        </div>
-    </div>
-    
-    <footer>© 2025 BEU Syllabus Viewer • Admin Panel with Direct PDF Management | Developed by <b>Md Zafar</b></footer>
 </div>
 
 <!-- PDF MODAL -->
-<div id="pdfModal" class="modal" onclick="closePDFModalOnBg(event)">
-    <div class="modal-box" onclick="event.stopPropagation()">
+<div class="modal" id="pdfModal">
+    <div class="modal-box">
         <div class="modal-top">
-            <strong>📄 Syllabus PDF Preview</strong>
-            <div>
-                <button class="close-modal" onclick="closePDFModal()">Close</button>
-                <button class="close-modal" id="modalDownloadBtn" style="background: #4caf50; margin-left: 10px;">⬇️ Download</button>
+            <strong>Syllabus PDF</strong>
+            <div class="btn-group">
+                <button class="close-btn" onclick="closePDF()">Close</button>
+                <button class="close-btn" id="downloadPDFBtn">Download</button>
             </div>
         </div>
-        <iframe id="pdfFrame" title="Syllabus PDF"></iframe>
-    </div>
-</div>
-
-<!-- DEVELOPER MODAL -->
-<div id="devModal" class="modal" onclick="closeDevModalOnBg(event)">
-    <div class="modal-box" onclick="event.stopPropagation()">
-        <div class="modal-top">
-            <strong>👨‍💻 About Developer</strong>
-            <button class="close-modal" onclick="closeDevModal()">Close</button>
-        </div>
-        <div class="modal-content" style="text-align:center;">
-            <img loading="lazy" src="https://raw.githubusercontent.com/mdzafar864/BEU-Syllabus-App/main/Developer%20(2).png" style="width: 100px; border-radius: 50%; margin-bottom: 15px;" onerror="this.src='https://via.placeholder.com/100'">
-            <h3>Md Zafar</h3>
-            <p>Full-Stack Developer • UI/UX Designer • PWA Specialist</p>
-            <p>📧 <a href="mailto:mdzafarsabour35@gmail.com">mdzafarsabour35@gmail.com</a></p>
-            <p>🔗 <a href="https://www.linkedin.com/in/mdzafar864" target="_blank">LinkedIn Profile</a></p>
-            <a href="https://youtube.com/@engineers_pathway?si=27Bq_FHXS2vm_Xi0" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #ff0000 0%, #ff6b6b 100%); color: white; padding: 12px 24px; border-radius: 50px; margin-top: 15px; text-decoration: none; font-weight: bold;">▶ Visit My YouTube Channel</a>
-            <hr style="margin: 20px 0;">
-            <p>This application provides fast access to BEU syllabus. Fully responsive, lightweight and PWA ready with admin panel for direct PDF management.</p>
-            <p><strong>Version:</strong> 2.0 (Admin + PDF Manager)</p>
-        </div>
+        <iframe id="pdfFrame" loading="lazy" title="Syllabus PDF"></iframe>
     </div>
 </div>
 
 <script>
-    // DEFAULT SYLLABUS DATABASE
-    const DEFAULT_SYLLABUS = {
-        "1stNew": { "CE": "https://drive.google.com/file/d/1Qd3X732fBWyEax1GTudkBWn7fpe57CgA/preview", "CS": "https://drive.google.com/file/d/1Zp-UAEgj72UstczPS_wSIBtlPU48USal/preview", "EE": "https://drive.google.com/file/d/1dZCtmM7w3H9dRpsWMlDhhJZNvFOiA1up/preview", "ECE": "https://drive.google.com/file/d/14cLD5aiYQp_2U3qKN16pa7U4fowBMg3J/preview", "ME": "https://drive.google.com/file/d/1yYB-UOYnpkOCYspJeZv83o7Rjy3wfcB8/preview" },
-        "1stOld": { "CE": "https://drive.google.com/file/d/1iRWghHRyCP6WPZ3Xoc0DdScIytir3xRn/preview", "CS": "https://drive.google.com/file/d/1EHpLPUo0_7086gFmk2WRZv2fMw93Jcdb/preview", "EE": "https://drive.google.com/file/d/1BtS61CEIOidszDe5FLBVQUake_8RQZlK/preview", "ECE": "https://drive.google.com/file/d/1t57gqcXtYajz6p5q6FXtcBVPb-mUgX1m/preview", "ME": "https://drive.google.com/file/d/1gyWaJKhhcZNmSF9WlWfqRXfnTeA87hvY/preview" },
-        "2ndNew": { "CE": "https://drive.google.com/file/d/13q_AFXP9e2AWyHHtHWp_Fm4bRgtME3qv/preview", "CS": "https://drive.google.com/file/d/15Y2Vsq8xe3Cl2Sc4BcXtL4XQMsqwKIFh/preview", "EE": "https://drive.google.com/file/d/1wgmEj8RSBWleYUZ1JjzD7tICuiQgJEDW/preview", "ECE": "https://drive.google.com/file/d/1THqchJygHP7BVVQjj-kf4YmMHBrjfA_x/preview", "ME": "https://drive.google.com/file/d/1hhAgOvC2LvbBRv6f7n1MSHPxD9MBVgsy/preview" },
-        "2ndOld": { "CE": "https://drive.google.com/file/d/1jW97lTtufHT26vkRP6KISUiKWSYe6F3o/preview", "CS": "https://drive.google.com/file/d/16JynS8hA5JtsSlIc3-HBUPqI9o1F2ziN/preview", "EE": "https://drive.google.com/file/d/1CrAHd-0bwzESjiLtb-AQwOeKtopyiJm9/preview", "ECE": "https://drive.google.com/file/d/1eJQJy3I853QoqfNzOT5XFUgncJKxbnv6/preview", "ME": "https://drive.google.com/file/d/1xwhvlJIQJRCqKLCPTKeOOdjzkUgr8S5U/preview" },
-        "3rdNew": { "CE": "https://drive.google.com/file/d/1GzMwwCkUrHPmc5fgyWOxOSsPof9dQZO8/preview", "CS": "https://drive.google.com/file/d/18tjQnI2qGtbSzRWEp08KqKY4gDvE25em/preview", "IOT": "https://drive.google.com/file/d/1DyoqlnntdtG-RA0ET1wH4FrR-DOB3mtF/preview", "EE": "https://drive.google.com/file/d/1nKpL1rXXa7EGJqbvDkmEem1uh74QWjOU/preview", "ECE": "https://drive.google.com/file/d/1kWy1_zhggLM9U4jrkTzGWNdLcE-4QXMr/preview", "ME": "https://drive.google.com/file/d/14yS8pyf83vIA1vs-_DbAvWbYpF8y6gc9/preview" },
-        "3rdOld": { "CE": "https://drive.google.com/file/d/1IS4EV9JvOfoLW3cYRW7U-qBkXyRAvFlD/preview", "CS": "https://drive.google.com/file/d/1ZlU22NFGirTuV01jKYiG9zdSU_IO29-t/preview", "EE": "https://drive.google.com/file/d/1D2gAZlW299s9f60wcdicGSZK7DpZVXkc/preview", "ECE": "https://drive.google.com/file/d/1auOpeh5UX4E23rnxIQo1K9TdFrqSXrm0/preview", "ME": "https://drive.google.com/file/d/1XE_l1tfHGZHMDIxU6KNlcjlqiKxKN-ZW/preview" },
-        "4th": { "CE": "https://drive.google.com/file/d/17w5zTFNaWUOg7S_vUrqW_AxtMyf7bPdU/preview", "CS": "https://drive.google.com/file/d/1ODCj6Omx6dUuHR-Cmwh4iu37TaMQyTLn/preview", "EE": "https://drive.google.com/file/d/1G-cJOckwjZRoaDz0Nnw-CphpqBcZztA7/preview", "ECE": "https://drive.google.com/file/d/1nkfp0xRno6_ybJSWqZ6_ryiwI4aNsjXh/preview", "ME": "https://drive.google.com/file/d/1jVvYbUmth-RIbhLBXbDf3ooB8zgz8fSc/preview" },
-        "5th": { "CE": "https://drive.google.com/file/d/1tGXDItZ5g-AsnsXN0KmMifbA36vgxA0C/preview", "CS": "https://drive.google.com/file/d/1SZdAT8a1vrIfrMPYjl0Q-0cc3hBba3z3/preview", "EE": "https://drive.google.com/file/d/1MA_tDBF7Fuvg8OGgn8bzg4mHSUTmQ-dC/preview", "ECE": "https://drive.google.com/file/d/1dJV_E7tPdhmmA7IutIDeaDMz3rxYb9XR/preview", "ME": "https://drive.google.com/file/d/1FW1-YDLvthfdG52szzsLzTIU9DOI03bc/preview" },
-        "6th": { "CE": "https://drive.google.com/file/d/1MxzSoTSdMgCvgCPiDFsDjVuu4QaJCQge/preview", "CS": "https://drive.google.com/file/d/1ckXxGY5kdHmxlAIGsq-NfDskA4Mj_xQj/preview", "EE": "https://drive.google.com/file/d/1obhgEQmyRzDg1XPG7Gc6u5SyMugXN9bn/preview", "ECE": "https://drive.google.com/file/d/1reUmWqura-4UnEx7tpjv6wANADxvW_lc/preview", "ME": "https://drive.google.com/file/d/19UDBkvdYqgMqRzV_Fgre8vq8utOapy2q/preview" },
-        "7th": { "CE": "https://drive.google.com/file/d/1Qy64E3CCdfhQvD8PaihwPDFVz2FwDqGr/preview", "CS": "https://drive.google.com/file/d/1uW4HVIaLErhWIyj36Lday4JMH1ZfuLEp/preview", "EE": "https://drive.google.com/file/d/1ey1jhsveL-eO0gc0FgwlNs7U05qRQHp5/preview", "ECE": "https://drive.google.com/file/d/1aDSSzOz8kWsmO0oJV7Z5CZ2lnCXReEqq/preview", "ME": "https://drive.google.com/file/d/1kMv43ZFJMctH_iRYbI230GCNN4UkZYud/preview" },
-        "8th": { "EE": "https://drive.google.com/file/d/1BwL_f3KCmWzuEulEth3G3hQw5sxLvBOy/preview", "ME": "https://drive.google.com/file/d/1PPkfTohITDMkIFNuw836gSOSUjCFtt3n/preview" }
+    // ----------------------------------------------
+    // BASE SYLLABUS DATABASE (FALLBACK + PERSISTENT)
+    // ----------------------------------------------
+    const defaultSyllabus = {
+      "1stNew": {
+        "CE": "https://drive.google.com/file/d/1Qd3X732fBWyEax1GTudkBWn7fpe57CgA/preview",
+        "CS": "https://drive.google.com/file/d/1Zp-UAEgj72UstczPS_wSIBtlPU48USal/preview",
+        "EE": "https://drive.google.com/file/d/1dZCtmM7w3H9dRpsWMlDhhJZNvFOiA1up/preview",
+        "ECE": "https://drive.google.com/file/d/14cLD5aiYQp_2U3qKN16pa7U4fowBMg3J/preview",
+        "ME": "https://drive.google.com/file/d/1yYB-UOYnpkOCYspJeZv83o7Rjy3wfcB8/preview"
+      },
+      "1stOld": {
+        "CE": "https://drive.google.com/file/d/1iRWghHRyCP6WPZ3Xoc0DdScIytir3xRn/preview",
+        "CS": "https://drive.google.com/file/d/1EHpLPUo0_7086gFmk2WRZv2fMw93Jcdb/preview",
+        "EE": "https://drive.google.com/file/d/1BtS61CEIOidszDe5FLBVQUake_8RQZlK/preview",
+        "ECE": "https://drive.google.com/file/d/1t57gqcXtYajz6p5q6FXtcBVPb-mUgX1m/preview",
+        "ME": "https://drive.google.com/file/d/1gyWaJKhhcZNmSF9WlWfqRXfnTeA87hvY/preview"
+      },
+      "2ndNew": {
+        "CE": "https://drive.google.com/file/d/13q_AFXP9e2AWyHHtHWp_Fm4bRgtME3qv/preview",
+        "CS": "https://drive.google.com/file/d/15Y2Vsq8xe3Cl2Sc4BcXtL4XQMsqwKIFh/preview",
+        "EE": "https://drive.google.com/file/d/1wgmEj8RSBWleYUZ1JjzD7tICuiQgJEDW/preview",
+        "ECE": "https://drive.google.com/file/d/1THqchJygHP7BVVQjj-kf4YmMHBrjfA_x/preview",
+        "ME": "https://drive.google.com/file/d/1hhAgOvC2LvbBRv6f7n1MSHPxD9MBVgsy/preview"
+      },
+      "2ndOld": {
+        "CE": "https://drive.google.com/file/d/1jW97lTtufHT26vkRP6KISUiKWSYe6F3o/preview",
+        "CS": "https://drive.google.com/file/d/16JynS8hA5JtsSlIc3-HBUPqI9o1F2ziN/preview",
+        "EE": "https://drive.google.com/file/d/1CrAHd-0bwzESjiLtb-AQwOeKtopyiJm9/preview",
+        "ECE": "https://drive.google.com/file/d/1eJQJy3I853QoqfNzOT5XFUgncJKxbnv6/preview",
+        "ME": "https://drive.google.com/file/d/1xwhvlJIQJRCqKLCPTKeOOdjzkUgr8S5U/preview"
+      },
+      "3rdNew": {
+        "CE": "https://drive.google.com/file/d/1GzMwwCkUrHPmc5fgyWOxOSsPof9dQZO8/preview",
+        "CS": "https://drive.google.com/file/d/18tjQnI2qGtbSzRWEp08KqKY4gDvE25em/preview",
+        "IOT": "https://drive.google.com/file/d/1DyoqlnntdtG-RA0ET1wH4FrR-DOB3mtF/preview",
+        "EE": "https://drive.google.com/file/d/1nKpL1rXXa7EGJqbvDkmEem1uh74QWjOU/preview",
+        "ECE": "https://drive.google.com/file/d/1kWy1_zhggLM9U4jrkTzGWNdLcE-4QXMr/preview",
+        "ME": "https://drive.google.com/file/d/14yS8pyf83vIA1vs-_DbAvWbYpF8y6gc9/preview"
+      },
+      "3rdOld": {
+        "CE": "https://drive.google.com/file/d/1IS4EV9JvOfoLW3cYRW7U-qBkXyRAvFlD/preview",
+        "CS": "https://drive.google.com/file/d/1ZlU22NFGirTuV01jKYiG9zdSU_IO29-t/preview",
+        "EE": "https://drive.google.com/file/d/1D2gAZlW299s9f60wcdicGSZK7DpZVXkc/preview",
+        "ECE": "https://drive.google.com/file/d/1auOpeh5UX4E23rnxIQo1K9TdFrqSXrm0/preview",
+        "ME": "https://drive.google.com/file/d/1XE_l1tfHGZHMDIxU6KNlcjlqiKxKN-ZW/preview"
+      },
+      "4th": {
+        "CE": "https://drive.google.com/file/d/17w5zTFNaWUOg7S_vUrqW_AxtMyf7bPdU/preview",
+        "CS": "https://drive.google.com/file/d/1ODCj6Omx6dUuHR-Cmwh4iu37TaMQyTLn/preview",
+        "EE": "https://drive.google.com/file/d/1G-cJOckwjZRoaDz0Nnw-CphpqBcZztA7/preview",
+        "ECE": "https://drive.google.com/file/d/1nkfp0xRno6_ybJSWqZ6_ryiwI4aNsjXh/preview",
+        "ME": "https://drive.google.com/file/d/1jVvYbUmth-RIbhLBXbDf3ooB8zgz8fSc/preview"
+      },
+      "5th": {
+        "CE": "https://drive.google.com/file/d/1tGXDItZ5g-AsnsXN0KmMifbA36vgxA0C/preview",
+        "CS": "https://drive.google.com/file/d/1SZdAT8a1vrIfrMPYjl0Q-0cc3hBba3z3/preview",
+        "EE": "https://drive.google.com/file/d/1MA_tDBF7Fuvg8OGgn8bzg4mHSUTmQ-dC/preview",
+        "ECE": "https://drive.google.com/file/d/1dJV_E7tPdhmmA7IutIDeaDMz3rxYb9XR/preview",
+        "ME": "https://drive.google.com/file/d/1FW1-YDLvthfdG52szzsLzTIU9DOI03bc/preview"
+      },
+      "6th": {
+        "CE": "https://drive.google.com/file/d/1MxzSoTSdMgCvgCPiDFsDjVuu4QaJCQge/preview",
+        "CS": "https://drive.google.com/file/d/1ckXxGY5kdHmxlAIGsq-NfDskA4Mj_xQj/preview",
+        "EE": "https://drive.google.com/file/d/1obhgEQmyRzDg1XPG7Gc6u5SyMugXN9bn/preview",
+        "ECE": "https://drive.google.com/file/d/1reUmWqura-4UnEx7tpjv6wANADxvW_lc/preview",
+        "ME": "https://drive.google.com/file/d/19UDBkvdYqgMqRzV_Fgre8vq8utOapy2q/preview"
+      },
+      "7th": {
+        "CE": "https://drive.google.com/file/d/1Qy64E3CCdfhQvD8PaihwPDFVz2FwDqGr/preview",
+        "CS": "https://drive.google.com/file/d/1uW4HVIaLErhWIyj36Lday4JMH1ZfuLEp/preview",
+        "EE": "https://drive.google.com/file/d/1ey1jhsveL-eO0gc0FgwlNs7U05qRQHp5/preview",
+        "ECE": "https://drive.google.com/file/d/1aDSSzOz8kWsmO0oJV7Z5CZ2lnCXReEqq/preview",
+        "ME": "https://drive.google.com/file/d/1kMv43ZFJMctH_iRYbI230GCNN4UkZYud/preview"
+      },
+      "8th": {
+        "EE": "https://drive.google.com/file/d/1BwL_f3KCmWzuEulEth3G3hQw5sxLvBOy/preview",
+        "ME": "https://drive.google.com/file/d/1PPkfTohITDMkIFNuw836gSOSUjCFtt3n/preview"
+      }
     };
-    
+
     // Load from localStorage or use default
-    let syllabusDB = JSON.parse(localStorage.getItem('beu_syllabus_db'));
-    if (!syllabusDB) {
-        syllabusDB = JSON.parse(JSON.stringify(DEFAULT_SYLLABUS));
-        localStorage.setItem('beu_syllabus_db', JSON.stringify(syllabusDB));
-    }
-    
-    // Helper: Save DB and refresh UI
-    function saveAndRefresh() {
-        localStorage.setItem('beu_syllabus_db', JSON.stringify(syllabusDB));
-        renderAdminTable();
-    }
-    
-    // Render table in admin panel
-    function renderAdminTable() {
-        const tbody = document.getElementById('tableBody');
-        if (!tbody) return;
-        let html = '';
-        const semesters = Object.keys(syllabusDB).sort();
-        
-        for (let sem of semesters) {
-            const branches = syllabusDB[sem];
-            for (let branch of Object.keys(branches)) {
-                const link = branches[branch];
-                html += `<tr>
-                    <td><span class="badge">${sem}</span></td>
-                    <td><strong>${branch}</strong></td>
-                    <td><a href="${link}" target="_blank" style="font-size: 11px; word-break: break-all;">${link.substring(0, 60)}...</a></td>
-                    <td>
-                        <button class="edit-link" onclick="editEntry('${sem}', '${branch}', '${link.replace(/'/g, "\\'")}')">✏️ Edit</button>
-                        <button class="del-link" onclick="deleteEntry('${sem}', '${branch}')">🗑️ Del</button>
-                    </td>
-                </tr>`;
-            }
-        }
-        
-        if (html === '') {
-            html = '<tr><td colspan="4" style="text-align:center;">No syllabus entries found. Add via form above.</td></tr>';
-        }
-        tbody.innerHTML = html;
-    }
-    
-    // Edit entry function
-    window.editEntry = function(sem, branch, link) {
-        document.getElementById('adminSem').value = sem;
-        document.getElementById('adminBranch').value = branch;
-        document.getElementById('pdfUrlInput').value = link;
-        showAdminMsg(`📝 Editing: ${sem} - ${branch}. Update URL and click Save.`, '#e3f2fd');
-    };
-    
-    // Delete entry function
-    window.deleteEntry = function(sem, branch) {
-        if (confirm(`Delete syllabus for ${sem} - ${branch}?`)) {
-            if (syllabusDB[sem] && syllabusDB[sem][branch]) {
-                delete syllabusDB[sem][branch];
-                if (Object.keys(syllabusDB[sem]).length === 0) {
-                    delete syllabusDB[sem];
+    let syllabusDB = { ...defaultSyllabus };
+    const STORAGE_KEY = "BEU_Syllabus_Admin_DB";
+
+    function loadAdminDB() {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if(saved) {
+            try {
+                const parsed = JSON.parse(saved);
+                // merge deeply to preserve all branches even if new semester added in future
+                for(let sem in parsed) {
+                    if(!syllabusDB[sem]) syllabusDB[sem] = {};
+                    for(let branch in parsed[sem]) {
+                        syllabusDB[sem][branch] = parsed[sem][branch];
+                    }
                 }
-                saveAndRefresh();
-                showAdminMsg(`✅ Deleted ${sem} / ${branch}`, '#c8e6c9');
-            } else {
-                showAdminMsg(`⚠️ Entry not found.`, '#ffcdd2');
-            }
+            } catch(e) { console.warn(e); }
         }
-    };
-    
-    function showAdminMsg(msg, bg = '#e8f0fe') {
-        const div = document.getElementById('adminMsg');
-        div.style.backgroundColor = bg;
-        div.style.padding = '12px';
-        div.style.borderRadius = '12px';
-        div.innerHTML = msg;
-        setTimeout(() => { if(div) div.innerHTML = ''; }, 3500);
     }
-    
-    // Save PDF entry
-    function savePdfEntry() {
-        const sem = document.getElementById('adminSem').value;
-        const branch = document.getElementById('adminBranch').value;
-        let url = document.getElementById('pdfUrlInput').value.trim();
-        
-        if (!sem || !branch) {
-            showAdminMsg('❌ Please select both Semester and Branch!', '#ffcdd2');
-            return;
-        }
-        if (!url) {
-            showAdminMsg('❌ Please enter a valid PDF embed link.', '#ffcdd2');
-            return;
-        }
-        if (!url.startsWith('http')) {
-            showAdminMsg('❌ Link must start with http:// or https://', '#ffcdd2');
-            return;
-        }
-        
-        if (!syllabusDB[sem]) syllabusDB[sem] = {};
-        syllabusDB[sem][branch] = url;
-        saveAndRefresh();
-        showAdminMsg(`✅ Successfully updated ${sem} → ${branch}`, '#c8e6c9');
-        document.getElementById('pdfUrlInput').value = '';
+
+    function persistAdminDB() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(syllabusDB));
     }
-    
-    function deletePdfEntry() {
-        const sem = document.getElementById('adminSem').value;
-        const branch = document.getElementById('adminBranch').value;
-        if (!sem || !branch) {
-            showAdminMsg('Select semester & branch to delete', '#ffcdd2');
-            return;
+
+    loadAdminDB();
+
+    // Helper: get PDF link with fallback
+    function getPDFLink(branch, sem) {
+        if(syllabusDB[sem] && syllabusDB[sem][branch]) {
+            return syllabusDB[sem][branch];
         }
-        if (syllabusDB[sem] && syllabusDB[sem][branch]) {
-            delete syllabusDB[sem][branch];
-            if (Object.keys(syllabusDB[sem]).length === 0) delete syllabusDB[sem];
-            saveAndRefresh();
-            showAdminMsg(`🗑️ Removed ${sem} - ${branch}`, '#ffcdd2');
+        return null;
+    }
+
+    // Update current URL display in admin panel
+    function updateCurrentUrlDisplay() {
+        const branch = document.getElementById("adminBranch").value;
+        const sem = document.getElementById("adminSem").value;
+        const url = getPDFLink(branch, sem);
+        const span = document.getElementById("currentUrlDisplay");
+        if(url) {
+            span.innerText = url.length > 70 ? url.substring(0,70)+"..." : url;
+            span.style.color = "#0f3b2c";
         } else {
-            showAdminMsg(`⚠️ No entry found for ${sem} / ${branch}`, '#fff3cd');
+            span.innerText = "Not available (select valid combo)";
+            span.style.color = "#b91c1c";
         }
     }
-    
-    function resetToDefault() {
-        if (confirm('⚠️ WARNING: This will erase all custom PDF links and restore default syllabus. Continue?')) {
-            syllabusDB = JSON.parse(JSON.stringify(DEFAULT_SYLLABUS));
-            saveAndRefresh();
-            showAdminMsg('🔄 Database reset to default syllabus!', '#c8e6c9');
+
+    // upload/update handler
+    function handleUpload() {
+        const branch = document.getElementById("adminBranch").value;
+        const sem = document.getElementById("adminSem").value;
+        let newUrl = document.getElementById("pdfLinkInput").value.trim();
+        const statusDiv = document.getElementById("adminStatusMsg");
+        
+        if(!branch || !sem) {
+            statusDiv.innerText = "❌ Please select branch and semester.";
+            statusDiv.className = "admin-status error";
+            statusDiv.style.display = "block";
+            setTimeout(() => { statusDiv.style.display = "none"; }, 3000);
+            return;
         }
-    }
-    
-    // VIEWER LOGIC
-    const branchSelect = document.getElementById('branch');
-    const semSelect = document.getElementById('sem');
-    const openBtn = document.getElementById('openBtn');
-    const msgDiv = document.getElementById('msg');
-    const pdfModal = document.getElementById('pdfModal');
-    const pdfFrame = document.getElementById('pdfFrame');
-    const modalDownloadBtn = document.getElementById('modalDownloadBtn');
-    
-    function showViewerMessage(text, isError = false) {
-        msgDiv.style.background = isError ? '#ffebee' : '#e8f0fe';
-        msgDiv.innerHTML = text;
-        setTimeout(() => {
-            if(msgDiv.innerHTML === text) {
-                msgDiv.innerHTML = "✅ Choose branch & semester to view syllabus.";
-                msgDiv.style.background = '#e8f0fe';
+        
+        if(!newUrl) {
+            statusDiv.innerText = "❌ Please enter a valid Google Drive preview link.";
+            statusDiv.className = "admin-status error";
+            statusDiv.style.display = "block";
+            setTimeout(() => { statusDiv.style.display = "none"; }, 3000);
+            return;
+        }
+        
+        // basic validation: should contain /preview or drive.google
+        if(!newUrl.includes("drive.google.com") || !newUrl.includes("/preview")) {
+            if(!newUrl.includes("/preview")) {
+                statusDiv.innerText = "⚠️ Warning: URL may not be a valid preview link. Must contain '/preview'. But saving anyway.";
+                statusDiv.className = "admin-status error";
+                setTimeout(() => { statusDiv.style.display = "none"; }, 4000);
             }
-        }, 4000);
+        }
+        
+        // ensure semester object exists
+        if(!syllabusDB[sem]) syllabusDB[sem] = {};
+        syllabusDB[sem][branch] = newUrl;
+        persistAdminDB();
+        
+        statusDiv.innerText = `✅ Success! Syllabus updated for ${branch} - ${sem}`;
+        statusDiv.className = "admin-status";
+        statusDiv.style.display = "block";
+        setTimeout(() => { statusDiv.style.display = "none"; }, 3500);
+        
+        updateCurrentUrlDisplay();
+        document.getElementById("pdfLinkInput").value = "";
+        // Also show a message in main area for non-admin feedback (optional)
+        showMessage(`📢 Admin updated syllabus for ${branch} - ${sem}.`, 4000);
     }
+
+    // attach event listeners for admin
+    document.getElementById("uploadPdfBtn").addEventListener("click", handleUpload);
+    document.getElementById("adminBranch").addEventListener("change", updateCurrentUrlDisplay);
+    document.getElementById("adminSem").addEventListener("change", updateCurrentUrlDisplay);
     
+    // initial display
+    updateCurrentUrlDisplay();
+
+    // ---------- MAIN APP INTERACTION (same as before with dynamic DB) ----------
+    let hideTimer;
+    const branchSelect = document.getElementById("branch");
+    const semSelect = document.getElementById("sem");
+    const msgDiv = document.getElementById("msg");
+    const openBtn = document.getElementById("openBtn");
+    const pdfFrame = document.getElementById("pdfFrame");
+    const pdfModal = document.getElementById("pdfModal");
+    const devModal = document.getElementById("devModal");
+
+    branchSelect.onchange = semSelect.onchange = () => {
+        msgDiv.style.opacity = 1;
+        msgDiv.innerHTML = "Choose branch & semester to view syllabus.";
+    };
+
+    function showMessage(text, duration) {
+        clearTimeout(hideTimer);
+        msgDiv.style.opacity = 1;
+        msgDiv.innerHTML = text;
+        hideTimer = setTimeout(() => {
+            msgDiv.style.opacity = 0;
+            setTimeout(() => {
+                msgDiv.innerHTML = "Choose branch & semester to view syllabus.";
+                msgDiv.style.opacity = 1;
+            }, 400);
+        }, duration);
+    }
+
     openBtn.onclick = () => {
-        const branch = branchSelect.value;
-        const sem = semSelect.value;
-        if (!branch || !sem) {
-            showViewerMessage('❌ Please select both branch & semester.', true);
+        let b = branchSelect.value;
+        let s = semSelect.value;
+        if (!b || !s) {
+            showMessage("❌ Please select both branch & semester.", 10000);
             return;
         }
-        if (!syllabusDB[sem] || !syllabusDB[sem][branch]) {
-            showViewerMessage(`❌ Syllabus not available for ${branch} - ${sem}. Use Admin panel to add.`, true);
+        let pdfLink = getPDFLink(b, s);
+        if (!pdfLink) {
+            showMessage("❌ Syllabus not available for this selection. Use Admin Dashboard to upload.", 9000);
             return;
         }
-        const pdfLink = syllabusDB[sem][branch];
         pdfFrame.src = pdfLink;
-        pdfModal.style.display = 'flex';
-        showViewerMessage(`📄 Preview opened. You can download from modal.`);
+        pdfModal.style.display = "flex";
+        showMessage("📄 Preview opened. Click Download to save.", 8000);
+    };
+
+    function closePDF() {
+        pdfModal.style.display = "none";
+        pdfFrame.src = "";
+    }
+    window.closePDF = closePDF;
+    window.closeDev = function() { devModal.style.display = "none"; };
+    
+    document.getElementById("devBtn").onclick = () => {
+        devModal.style.display = "flex";
+        updateCurrentUrlDisplay(); // refresh when opening
     };
     
-    window.closePDFModal = function() {
-        pdfModal.style.display = 'none';
-        pdfFrame.src = '';
-    };
-    
-    window.closePDFModalOnBg = function(event) {
-        if (event.target === pdfModal) closePDFModal();
-    };
-    
-    modalDownloadBtn.onclick = () => {
-        const currentSrc = pdfFrame.src;
-        if (!currentSrc || currentSrc === '') return;
+    // download functionality
+    const downloadPDFBtn = document.getElementById('downloadPDFBtn');
+    downloadPDFBtn.onclick = () => {
+        const pdfLink = pdfFrame.src;
+        if(!pdfLink || pdfLink === "") return;
         const a = document.createElement('a');
-        a.href = currentSrc;
-        a.download = `syllabus_${branchSelect.value}_${semSelect.value}.pdf`;
+        a.href = pdfLink;
+        let branchVal = branchSelect.value || "syllabus";
+        let semVal = semSelect.value || "doc";
+        a.download = `${branchVal}_${semVal}_syllabus.pdf`;
         document.body.appendChild(a);
         a.click();
         a.remove();
-        showViewerMessage('✅ Download started!');
+        showMessage("✅ Download started!", 5000);
     };
-    
-    // Developer modal
-    const devModal = document.getElementById('devModal');
-    const devBtn = document.getElementById('devBtn');
-    
-    window.closeDevModal = function() {
-        devModal.style.display = 'none';
-    };
-    
-    window.closeDevModalOnBg = function(event) {
-        if (event.target === devModal) closeDevModal();
-    };
-    
-    devBtn.onclick = () => {
-        devModal.style.display = 'flex';
-    };
-    
-    // Tab switching
-    window.switchTab = function(tab) {
-        const viewerPanel = document.getElementById('viewerPanel');
-        const adminPanel = document.getElementById('adminPanel');
-        const btns = document.querySelectorAll('.tab-btn');
-        
-        btns.forEach(btn => btn.classList.remove('active'));
-        
-        if (tab === 'viewer') {
-            viewerPanel.classList.add('active-panel');
-            adminPanel.classList.remove('active-panel');
-            btns[0].classList.add('active');
-        } else {
-            viewerPanel.classList.remove('active-panel');
-            adminPanel.classList.add('active-panel');
-            btns[1].classList.add('active');
-            renderAdminTable();
-        }
-    };
-    
-    // Event listeners
-    document.getElementById('savePdfBtn').addEventListener('click', savePdfEntry);
-    document.getElementById('deletePdfBtn').addEventListener('click', deletePdfEntry);
-    document.getElementById('resetDefaultBtn').addEventListener('click', resetToDefault);
-    
-    // Initial render
-    renderAdminTable();
-    
-    // Close modals on escape key
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            closePDFModal();
-            closeDevModal();
-        }
-    });
 </script>
+    
+<!-- FOOTER -->
+<footer id="myFooter" style="width:100%;text-align:center;padding:30px 10px;font-size:8px;margin-top:10px;opacity:0;">
+    © 2025 BEU Syllabus Viewer • Developed by <b>Md Zafar</b> • Admin Dashboard Enabled
+</footer>
+
+<style> 
+    @keyframes footerFadeUp {
+        0% { opacity:0; transform:translateY(25px); }
+        100% { opacity:1; transform:translateY(0); }
+    }
+    #myFooter { animation: footerFadeUp 1.3s ease-out forwards; }
+</style>
+
 </body>
 </html>
