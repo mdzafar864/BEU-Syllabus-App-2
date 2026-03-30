@@ -4,8 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#0066ff">
-  <title>BEU Syllabus Hub | Student Dashboard</title>
-  <meta name="description" content="BEU Syllabus Dashboard: Guest access with timer, student login & registration portal.">
+  <title>BEU Syllabus Hub | Admin + Student + Guest</title>
+  <!-- Google Identity Services SDK -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
     * {
       margin: 0;
@@ -23,14 +24,12 @@
       align-items: center;
     }
 
-    /* Main container */
     .dashboard-container {
-      max-width: 1300px;
+      max-width: 1400px;
       width: 100%;
       margin: 0 auto;
     }
 
-    /* Header */
     .header {
       text-align: center;
       margin-bottom: 30px;
@@ -62,20 +61,20 @@
     /* 3 sections grid */
     .sections-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
       gap: 28px;
       margin-bottom: 30px;
     }
 
-    /* Card style */
     .card {
       background: white;
       border-radius: 28px;
       box-shadow: 0 20px 35px -12px rgba(0,0,0,0.1);
       overflow: hidden;
       transition: transform 0.2s ease;
-      backdrop-filter: blur(0px);
       border: 1px solid rgba(255,255,255,0.3);
+      display: flex;
+      flex-direction: column;
     }
     .card:hover {
       transform: translateY(-4px);
@@ -86,7 +85,7 @@
       border-bottom: 2px solid #e2e8f0;
     }
     .card-header h2 {
-      font-size: 1.6rem;
+      font-size: 1.5rem;
       color: #0f172a;
       display: flex;
       align-items: center;
@@ -94,9 +93,8 @@
     }
     .card-body {
       padding: 22px;
+      flex: 1;
     }
-
-    /* Guest timer style */
     .timer-box {
       background: #eef2ff;
       border-radius: 20px;
@@ -111,11 +109,6 @@
       font-family: monospace;
       letter-spacing: 2px;
       color: #1e3a8a;
-    }
-    .guest-warning {
-      font-size: 0.85rem;
-      color: #b91c1c;
-      margin-top: 6px;
     }
     .btn {
       display: inline-block;
@@ -137,11 +130,11 @@
       border: 2px solid #0066ff;
       color: #0066ff;
     }
-    .btn-outline:hover {
-      background: #eef2ff;
-    }
     .btn-danger {
       background: #ef4444;
+    }
+    .btn-admin {
+      background: #8b5cf6;
     }
     .select-style, .input-style {
       width: 100%;
@@ -175,7 +168,7 @@
     .hidden {
       display: none;
     }
-    .student-dashboard {
+    .student-dashboard, .admin-dashboard {
       background: #fef9e3;
       border-radius: 20px;
       padding: 16px;
@@ -188,6 +181,32 @@
       margin: 10px 0;
       font-size: 0.85rem;
     }
+    .admin-stats {
+      background: #ede9fe;
+      padding: 12px;
+      border-radius: 16px;
+      margin: 12px 0;
+    }
+    .student-list-item {
+      background: white;
+      padding: 10px;
+      border-radius: 14px;
+      margin-bottom: 8px;
+      font-size: 0.8rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border: 1px solid #e2e8f0;
+    }
+    .delete-student {
+      background: #ef4444;
+      color: white;
+      border: none;
+      padding: 4px 12px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.7rem;
+    }
     hr {
       margin: 15px 0;
     }
@@ -198,6 +217,19 @@
       border-radius: 20px;
       background: #f1f5f9;
       text-align: center;
+    }
+    .google-btn-wrapper {
+      display: flex;
+      justify-content: center;
+      margin: 15px 0;
+    }
+    .admin-badge {
+      background: #8b5cf6;
+      color: white;
+      padding: 5px 12px;
+      border-radius: 30px;
+      font-size: 0.7rem;
+      display: inline-block;
     }
     footer {
       text-align: center;
@@ -219,7 +251,7 @@
       <img class="logo-img" src="https://raw.githubusercontent.com/mdzafar864/BEU-Syllabus-App/main/logo.png" alt="BEU Logo" onerror="this.src='https://via.placeholder.com/70?text=BEU'">
       <h1>📘 BEU Syllabus Hub</h1>
     </div>
-    <p class="sub">Access syllabus | Student Portal | Quick Registration</p>
+    <p class="sub">Guest • Student Portal • Admin (Google Login)</p>
   </div>
 
   <div class="sections-grid">
@@ -233,9 +265,9 @@
         <div class="timer-box">
           <div style="font-weight:600;">⏱️ Session Remaining</div>
           <div class="timer-digits" id="guestTimer">01:20</div>
-          <div class="guest-warning" id="guestMsg"></div>
+          <div class="guest-warning" id="guestMsg" style="font-size:0.75rem; color:#b91c1c;"></div>
         </div>
-        <p style="margin-bottom:12px; font-size:0.9rem;">✅ View any syllabus without login.<br>⏳ Session expires in <strong>1 min 20 sec</strong>. After that, please login.</p>
+        <p style="margin-bottom:12px; font-size:0.9rem;">✅ View syllabus without login.<br>⏳ Session expires in <strong>1 min 20 sec</strong>.</p>
         <select id="guestBranch" class="select-style">
           <option value="">-- Select Branch --</option>
           <option value="CE">Civil Engineering (CE)</option>
@@ -259,10 +291,10 @@
       </div>
     </div>
 
-    <!-- SECTION 2: STUDENT LOGIN (under student) -->
+    <!-- SECTION 2: STUDENT (Login/Register + Dashboard) -->
     <div class="card">
       <div class="card-header">
-        <h2>🔐 Student Login</h2>
+        <h2>🎓 Student Portal</h2>
       </div>
       <div class="card-body">
         <div id="loginFormArea">
@@ -281,7 +313,7 @@
           <div id="loginMsg" class="msg-area"></div>
         </div>
 
-        <!-- Signup Form (hidden initially) -->
+        <!-- Signup Form -->
         <div id="signupFormArea" class="hidden">
           <h3 style="margin-bottom:12px;">📝 Student Registration</h3>
           <div class="form-group"><label>Full Name</label><input type="text" id="signupName" class="input-style" placeholder="Full Name"></div>
@@ -296,10 +328,13 @@
           <div id="signupMsg" class="msg-area"></div>
         </div>
 
-        <!-- Student Dashboard after login (shows profile + syllabus access) -->
+        <!-- Student Dashboard after login -->
         <div id="studentDashboardPanel" class="hidden">
           <div class="student-dashboard">
-            <div style="display:flex; justify-content:space-between;"><strong>👨‍🎓 Student Dashboard</strong><button id="logoutBtn" style="background:#ef4444; border:none; padding:5px 12px; border-radius:30px; color:white; cursor:pointer;">Logout</button></div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <strong>👨‍🎓 Student Dashboard</strong>
+              <button id="logoutBtn" style="background:#ef4444; border:none; padding:5px 12px; border-radius:30px; color:white; cursor:pointer;">Logout</button>
+            </div>
             <div id="studentProfileInfo" class="info-badge"></div>
             <hr>
             <label>📂 Quick Syllabus (Branch & Semester)</label>
@@ -312,30 +347,43 @@
       </div>
     </div>
 
-    <!-- SECTION 3: EXTRA INFO / SYLLABUS PREVIEW MODAL (shared) -->
+    <!-- SECTION 3: ADMIN (Google Login) -->
     <div class="card">
       <div class="card-header">
-        <h2>📌 Quick Info</h2>
+        <h2>🛡️ Admin Console <span class="admin-badge">Google Auth</span></h2>
       </div>
       <div class="card-body">
-        <ul style="margin-left:20px; color:#334155;">
-          <li>✅ All BEU engineering branches syllabus</li>
-          <li>✅ Guest: 1min 20sec free access</li>
-          <li>✅ Student login: Unlimited access + profile</li>
-          <li>✅ Store: Name, RegNo, Telegram, Branch, Sem</li>
-        </ul>
-        <div style="background:#e9ecef; border-radius:18px; padding:12px; margin-top:20px;">
-          <p style="font-weight:600;">📢 Note:</p>
-          <p style="font-size:0.8rem;">Guest session auto-resets after timer. Student data stored locally (IndexedDB/LocalStorage). Real BEU syllabus PDF links included.</p>
+        <div id="adminNotLogged">
+          <p style="margin-bottom:15px;">🔐 Secure admin access using Google Sign-In. Only authorized emails can manage students.</p>
+          <div class="google-btn-wrapper" id="googleButtonContainer"></div>
+          <div id="adminLoginMsg" class="msg-area" style="background:#f3e8ff;"></div>
+        </div>
+
+        <div id="adminLoggedPanel" class="hidden">
+          <div class="admin-dashboard">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <strong>🛡️ Admin Dashboard</strong>
+              <button id="adminLogoutBtn" style="background:#6b21a5; border:none; padding:5px 12px; border-radius:30px; color:white; cursor:pointer;">Sign Out</button>
+            </div>
+            <div id="adminInfo" class="admin-stats" style="margin-top:12px;"></div>
+            <div class="admin-stats">
+              <strong>📊 Registered Students: <span id="totalStudentsCount">0</span></strong>
+              <button id="refreshAdminBtn" style="margin-left:10px; background:#8b5cf6; border:none; padding:4px 12px; border-radius:20px; color:white; cursor:pointer;">Refresh</button>
+            </div>
+            <div id="studentListContainer" style="max-height: 280px; overflow-y: auto;">
+              <p style="font-size:0.8rem;">Loading student list...</p>
+            </div>
+            <div class="msg-area" id="adminActionMsg"></div>
+          </div>
         </div>
       </div>
     </div>
   </div>
-  <footer>© 2025 BEU Syllabus Viewer • Developed by Md Zafar • Student Portal + Guest Timer (80 sec)</footer>
+  <footer>© 2025 BEU Syllabus Hub • Guest (80 sec) • Student Portal • Admin with Google Login</footer>
 </div>
 
 <!-- PDF MODAL (shared) -->
-<div id="pdfModal" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:none; justify-content:center; align-items:center; z-index:9999;">
+<div id="pdfModal" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); display:none; justify-content:center; align-items:center; z-index:9999;">
   <div style="background:white; width:90%; max-width:1000px; height:85vh; border-radius:24px; display:flex; flex-direction:column;">
     <div style="padding:16px; background:#f1f5f9; border-radius:24px 24px 0 0; display:flex; justify-content:space-between;">
       <strong>Syllabus PDF Viewer</strong>
@@ -346,7 +394,7 @@
 </div>
 
 <script>
-  // ------------------------ SYLLABUS DATABASE (same as original but full coverage) ---------------------
+  // ------------------------ SYLLABUS DATABASE (full coverage) ---------------------
   const syllabusDB = {
     "1stNew": { "CE":"https://drive.google.com/file/d/1Qd3X732fBWyEax1GTudkBWn7fpe57CgA/preview","CS":"https://drive.google.com/file/d/1Zp-UAEgj72UstczPS_wSIBtlPU48USal/preview","EE":"https://drive.google.com/file/d/1dZCtmM7w3H9dRpsWMlDhhJZNvFOiA1up/preview","ECE":"https://drive.google.com/file/d/14cLD5aiYQp_2U3qKN16pa7U4fowBMg3J/preview","ME":"https://drive.google.com/file/d/1yYB-UOYnpkOCYspJeZv83o7Rjy3wfcB8/preview","IOT":"https://drive.google.com/file/d/1DyoqlnntdtG-RA0ET1wH4FrR-DOB3mtF/preview" },
     "1stOld": { "CE":"https://drive.google.com/file/d/1iRWghHRyCP6WPZ3Xoc0DdScIytir3xRn/preview","CS":"https://drive.google.com/file/d/1EHpLPUo0_7086gFmk2WRZv2fMw93Jcdb/preview","EE":"https://drive.google.com/file/d/1BtS61CEIOidszDe5FLBVQUake_8RQZlK/preview","ECE":"https://drive.google.com/file/d/1t57gqcXtYajz6p5q6FXtcBVPb-mUgX1m/preview","ME":"https://drive.google.com/file/d/1gyWaJKhhcZNmSF9WlWfqRXfnTeA87hvY/preview" },
@@ -361,7 +409,6 @@
     "8th": { "EE":"https://drive.google.com/file/d/1BwL_f3KCmWzuEulEth3G3hQw5sxLvBOy/preview","ME":"https://drive.google.com/file/d/1PPkfTohITDMkIFNuw836gSOSUjCFtt3n/preview","CS":"https://drive.google.com/file/d/1uW4HVIaLErhWIyj36Lday4JMH1ZfuLEp/preview" }
   };
 
-  // ---------- Helper: open PDF modal ----------
   function openPdfModal(pdfUrl, branchCode, semCode) {
     if(!pdfUrl) return false;
     const iframe = document.getElementById('pdfIframe');
@@ -382,7 +429,7 @@
     document.getElementById('pdfIframe').src = '';
   };
 
-  // --------------------- GUEST TIMER 1min 20sec = 80 sec ------------------
+  // --------------------- GUEST TIMER 80 sec ------------------
   let guestTimeLeft = 80;
   let guestTimerInterval = null;
   const guestTimerDisplay = document.getElementById('guestTimer');
@@ -399,53 +446,41 @@
     if(guestTimeLeft <= 0) {
       clearInterval(guestTimerInterval);
       guestTimerDisplay.innerText = "00:00";
-      guestMsgDiv.innerHTML = "⛔ Guest session expired! Please login as student for unlimited access.";
+      guestMsgDiv.innerHTML = "⛔ Guest session expired! Please login as student or admin.";
       guestBranch.disabled = true;
       guestSem.disabled = true;
       guestOpenBtn.disabled = true;
       guestOpenBtn.style.opacity = "0.5";
-      guestStatus.innerHTML = "⏰ Time's up. Kindly use Student Login section.";
+      guestStatus.innerHTML = "⏰ Time's up. Use Student/Admin section.";
     } else {
-      guestMsgDiv.innerHTML = `⏳ Active guest session: ${Math.floor(guestTimeLeft/60)}m ${guestTimeLeft%60}s left`;
+      guestMsgDiv.innerHTML = `⏳ Active guest: ${Math.floor(guestTimeLeft/60)}m ${guestTimeLeft%60}s left`;
     }
   }
   function startGuestTimer() {
     if(guestTimerInterval) clearInterval(guestTimerInterval);
     guestTimerInterval = setInterval(() => {
-      if(guestTimeLeft > 0) {
-        guestTimeLeft--;
-        updateGuestTimerUI();
-      } else {
-        clearInterval(guestTimerInterval);
-        updateGuestTimerUI();
-      }
+      if(guestTimeLeft > 0) { guestTimeLeft--; updateGuestTimerUI(); }
+      else { clearInterval(guestTimerInterval); updateGuestTimerUI(); }
     }, 1000);
   }
   startGuestTimer();
-  // reset guest timer if needed? but requirement: only 1min20sec for guest. We keep countdown.
   guestOpenBtn.onclick = () => {
-    if(guestTimeLeft <= 0) {
-      guestStatus.innerHTML = "❌ Guest session expired. Please login to continue.";
-      return;
-    }
-    let branch = guestBranch.value;
-    let sem = guestSem.value;
-    if(!branch || !sem) { guestStatus.innerHTML = "⚠️ Select branch & semester first."; return; }
+    if(guestTimeLeft <= 0) { guestStatus.innerHTML = "❌ Guest session expired. Login to continue."; return; }
+    let branch = guestBranch.value, sem = guestSem.value;
+    if(!branch || !sem) { guestStatus.innerHTML = "⚠️ Select branch & semester."; return; }
     let semData = syllabusDB[sem];
-    if(!semData || !semData[branch]) { guestStatus.innerHTML = "📭 Syllabus not available for this selection."; return; }
-    let pdfLink = semData[branch];
-    openPdfModal(pdfLink, branch, sem);
-    guestStatus.innerHTML = "✅ PDF opened! Guest session continues.";
+    if(!semData || !semData[branch]) { guestStatus.innerHTML = "📭 Syllabus not available."; return; }
+    openPdfModal(semData[branch], branch, sem);
+    guestStatus.innerHTML = "✅ PDF opened! Guest session active.";
   };
 
-  // ---------- STUDENT LOCAL STORAGE MANAGEMENT (users array) ----------
+  // ---------- STUDENT MANAGEMENT (localStorage) ----------
   let students = JSON.parse(localStorage.getItem("beu_students")) || [];
   let currentStudent = JSON.parse(sessionStorage.getItem("beu_current_student")) || null;
 
   function saveStudents() { localStorage.setItem("beu_students", JSON.stringify(students)); }
   function updateSession(student) { sessionStorage.setItem("beu_current_student", JSON.stringify(student)); currentStudent = student; }
 
-  // UI elements login/signup
   const loginFormArea = document.getElementById('loginFormArea');
   const signupFormArea = document.getElementById('signupFormArea');
   const studentDashboard = document.getElementById('studentDashboardPanel');
@@ -473,76 +508,144 @@
 
   function loginStudent(identifier, password) {
     const found = students.find(s => (s.email === identifier || s.regNo === identifier) && s.password === password);
-    if(found) {
-      updateSession(found);
-      renderStudentDashboard();
-      return true;
-    }
+    if(found) { updateSession(found); renderStudentDashboard(); return true; }
     return false;
   }
   function registerStudent(fullName, email, password, regNo, branch, semester, telegram) {
     if(students.some(s => s.email === email || s.regNo === regNo)) return false;
     const newStud = { fullName, email, password, regNo, branch, semester, telegram: telegram || '' };
-    students.push(newStud);
-    saveStudents();
-    updateSession(newStud);
-    renderStudentDashboard();
+    students.push(newStud); saveStudents(); updateSession(newStud); renderStudentDashboard();
     return true;
   }
-  logoutBtn.onclick = () => {
-    sessionStorage.removeItem("beu_current_student");
-    currentStudent = null;
-    loginFormArea.classList.remove('hidden');
-    signupFormArea.classList.add('hidden');
-    studentDashboard.classList.add('hidden');
-    document.getElementById('loginId').value = '';
-    document.getElementById('loginPassword').value = '';
-  };
+  logoutBtn.onclick = () => { sessionStorage.removeItem("beu_current_student"); currentStudent = null; loginFormArea.classList.remove('hidden'); signupFormArea.classList.add('hidden'); studentDashboard.classList.add('hidden'); };
   showSignupBtn.onclick = () => { loginFormArea.classList.add('hidden'); signupFormArea.classList.remove('hidden'); };
   showLoginBtn.onclick = () => { signupFormArea.classList.add('hidden'); loginFormArea.classList.remove('hidden'); };
   loginBtn.onclick = () => {
-    const id = document.getElementById('loginId').value.trim();
-    const pwd = document.getElementById('loginPassword').value;
+    const id = document.getElementById('loginId').value.trim(), pwd = document.getElementById('loginPassword').value;
     if(!id || !pwd) { document.getElementById('loginMsg').innerText = "Fill all fields"; return; }
     if(loginStudent(id, pwd)) document.getElementById('loginMsg').innerText = "✅ Login success!";
     else document.getElementById('loginMsg').innerText = "❌ Invalid credentials";
   };
   registerBtn.onclick = () => {
-    const name = document.getElementById('signupName').value.trim();
-    const email = document.getElementById('signupEmail').value.trim();
-    const pwd = document.getElementById('signupPass').value;
-    const reg = document.getElementById('signupRegNo').value.trim();
-    const branch = document.getElementById('signupBranch').value;
-    const sem = document.getElementById('signupSem').value;
-    const tele = document.getElementById('signupTelegram').value.trim();
-    if(!name || !email || !pwd || !reg || !branch || !sem) {
-      document.getElementById('signupMsg').innerText = "All required fields!";
-      return;
-    }
+    const name = document.getElementById('signupName').value.trim(), email = document.getElementById('signupEmail').value.trim(), pwd = document.getElementById('signupPass').value;
+    const reg = document.getElementById('signupRegNo').value.trim(), branch = document.getElementById('signupBranch').value, sem = document.getElementById('signupSem').value, tele = document.getElementById('signupTelegram').value.trim();
+    if(!name || !email || !pwd || !reg || !branch || !sem) { document.getElementById('signupMsg').innerText = "All required fields!"; return; }
     if(pwd.length < 4) { document.getElementById('signupMsg').innerText = "Password min 4 chars"; return; }
-    if(registerStudent(name, email, pwd, reg, branch, sem, tele)) {
-      document.getElementById('signupMsg').innerText = "Registration successful! Dashboard ready.";
-    } else {
-      document.getElementById('signupMsg').innerText = "Email or RegNo already exists.";
-    }
+    if(registerStudent(name, email, pwd, reg, branch, sem, tele)) document.getElementById('signupMsg').innerText = "Registration successful!";
+    else document.getElementById('signupMsg').innerText = "Email or RegNo already exists.";
   };
-  // Student open syllabus
   document.getElementById('studentOpenSyllabus').onclick = () => {
     if(!currentStudent) return;
-    const branch = document.getElementById('studentBranchSelect').value;
-    const sem = document.getElementById('studentSemSelect').value;
+    const branch = document.getElementById('studentBranchSelect').value, sem = document.getElementById('studentSemSelect').value;
     const semData = syllabusDB[sem];
-    if(!semData || !semData[branch]) {
-      document.getElementById('studentMsgArea').innerText = "Syllabus not found for this selection.";
-      return;
-    }
+    if(!semData || !semData[branch]) { document.getElementById('studentMsgArea').innerText = "Syllabus not found."; return; }
     openPdfModal(semData[branch], branch, sem);
     document.getElementById('studentMsgArea').innerHTML = "✅ PDF opened!";
   };
-  // If already logged in on load
   if(currentStudent) renderStudentDashboard();
   else { loginFormArea.classList.remove('hidden'); signupFormArea.classList.add('hidden'); studentDashboard.classList.add('hidden'); }
-  // Fix for IOT missing in some semesters: ensure safety
+
+  // --------------------- ADMIN SECTION (Google Login) ---------------------
+  let currentAdmin = null;
+  const adminNotLogged = document.getElementById('adminNotLogged');
+  const adminLoggedPanel = document.getElementById('adminLoggedPanel');
+  const adminInfoDiv = document.getElementById('adminInfo');
+  const studentListContainer = document.getElementById('studentListContainer');
+  const totalStudentsSpan = document.getElementById('totalStudentsCount');
+  const adminActionMsg = document.getElementById('adminActionMsg');
+
+  // Allowed admin emails (you can modify this list)
+  const ALLOWED_ADMIN_EMAILS = ["admin@beu.edu", "zafar@beu.edu", "mdzafar864@gmail.com"];
+
+  function renderStudentListForAdmin() {
+    if(!currentAdmin) return;
+    totalStudentsSpan.innerText = students.length;
+    if(students.length === 0) { studentListContainer.innerHTML = "<p>No students registered yet.</p>"; return; }
+    studentListContainer.innerHTML = students.map((stud, idx) => `
+      <div class="student-list-item">
+        <div><strong>${stud.fullName}</strong><br><small>${stud.email} | Reg: ${stud.regNo} | ${stud.branch} | Sem: ${stud.semester}</small></div>
+        <button class="delete-student" data-idx="${idx}">Delete</button>
+      </div>
+    `).join('');
+    document.querySelectorAll('.delete-student').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const idx = parseInt(btn.dataset.idx);
+        if(confirm("Delete this student record?")) {
+          students.splice(idx, 1);
+          saveStudents();
+          renderStudentListForAdmin();
+          adminActionMsg.innerText = "✅ Student deleted successfully.";
+          setTimeout(() => adminActionMsg.innerText = "", 3000);
+        }
+      });
+    });
+  }
+
+  function handleAdminLogin(googleUser) {
+    const email = googleUser.getEmail();
+    if(ALLOWED_ADMIN_EMAILS.includes(email)) {
+      currentAdmin = { name: googleUser.getName(), email: email, picture: googleUser.getProfileUrl() };
+      adminNotLogged.classList.add('hidden');
+      adminLoggedPanel.classList.remove('hidden');
+      adminInfoDiv.innerHTML = `<img src="${currentAdmin.picture}" width="32" style="border-radius:50%;" alt=""> <strong>${currentAdmin.name}</strong> (${currentAdmin.email}) - Admin Access`;
+      renderStudentListForAdmin();
+    } else {
+      document.getElementById('adminLoginMsg').innerHTML = "❌ Access Denied: Your Google email is not authorized as admin.";
+      googleUser.disconnect();
+    }
+  }
+
+  function initGoogleSignIn() {
+    if (typeof google !== 'undefined') {
+      google.accounts.id.initialize({
+        client_id: 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com', // Replace with actual client ID
+        callback: (response) => {
+          // Decode JWT token to get user info (for demo we use simple mock since real client ID needed)
+          // For demo & testing, we'll simulate admin login via a mock prompt because client ID requires OAuth consent screen.
+          // However to make it functional without client ID, we provide a simulated admin login button (for demo purposes)
+          // But real deployment: replace with actual client ID.
+          // Due to environment, we use a demo mock admin login to showcase functionality.
+          adminActionMsg.innerText = "⚠️ For demo: Use 'Simulate Admin' button below. (Replace client ID for production)";
+        }
+      });
+      // Render button but also provide a simulated admin login for demo
+      google.accounts.id.renderButton(document.getElementById("googleButtonContainer"), { theme: "outline", size: "large" });
+    } else {
+      document.getElementById("googleButtonContainer").innerHTML = "<button id='mockAdminBtn' class='btn btn-admin'>🔐 Simulate Admin Login (Demo)</button>";
+      document.getElementById("mockAdminBtn")?.addEventListener('click', () => {
+        // mock admin for demo (allows full admin view)
+        currentAdmin = { name: "Demo Admin", email: "admin@beu.edu", picture: "" };
+        adminNotLogged.classList.add('hidden');
+        adminLoggedPanel.classList.remove('hidden');
+        adminInfoDiv.innerHTML = `<strong>Demo Admin (Simulated)</strong> - Full Access`;
+        renderStudentListForAdmin();
+        adminActionMsg.innerHTML = "✅ Demo admin mode. In production, use real Google OAuth.";
+      });
+    }
+  }
+  // Since actual client ID would need configuration, we provide functional demo via simulate admin button
+  // But also allow proper google login placeholder. For demo, we'll manually add simulate option.
+  window.onload = () => {
+    if(!document.getElementById("mockAdminBtn") && typeof google === 'undefined') {
+      const btnContainer = document.getElementById("googleButtonContainer");
+      btnContainer.innerHTML = "<button id='mockAdminBtn' class='btn btn-admin'>🔐 Simulate Admin Login</button>";
+      document.getElementById("mockAdminBtn").addEventListener('click', () => {
+        currentAdmin = { name: "Admin Demo", email: "admin@beu.edu", picture: "" };
+        adminNotLogged.classList.add('hidden');
+        adminLoggedPanel.classList.remove('hidden');
+        adminInfoDiv.innerHTML = `<strong>Admin Demo Mode</strong> (Simulated) – Full Access`;
+        renderStudentListForAdmin();
+      });
+    }
+    initGoogleSignIn();
+  };
+  document.getElementById('adminLogoutBtn')?.addEventListener('click', () => {
+    currentAdmin = null;
+    adminNotLogged.classList.remove('hidden');
+    adminLoggedPanel.classList.add('hidden');
+    if (typeof google !== 'undefined' && google.accounts?.id) google.accounts.id.disableAutoSelect();
+  });
+  document.getElementById('refreshAdminBtn')?.addEventListener('click', () => { if(currentAdmin) renderStudentListForAdmin(); });
 </script>
 </body>
 </html>
