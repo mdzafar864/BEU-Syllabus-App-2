@@ -1,11 +1,10 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="description" content="BEU Syllabus Manager Demo - Student & Admin Login System with Firebase">
-    <title>BEU Syllabus Demo | Student & Admin Login System</title>
+    <meta name="description" content="BEU Syllabus Manager - Chrome-style User Menu with Student & Admin Login System">
+    <title>BEU Syllabus | Chrome-Style User Menu</title>
     <!-- Font Awesome 6 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
@@ -19,101 +18,320 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            padding: 20px;
         }
 
-        /* Demo Badge */
-        .demo-badge {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: linear-gradient(135deg, #ff6b6b, #ff4757);
-            color: white;
+        /* Chrome-Style Top Bar */
+        .chrome-top-bar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             padding: 8px 20px;
-            border-radius: 50px;
-            font-weight: bold;
-            font-size: 14px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
             z-index: 1000;
-            animation: pulse 2s infinite;
         }
 
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+        }
+
+        .app-title {
+            font-size: 18px;
+            font-weight: 600;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Chrome-Style User Menu */
+        .user-menu-container {
+            position: relative;
+        }
+
+        .user-menu-button {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 30px;
+            padding: 6px 16px 6px 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .user-menu-button:hover {
+            background: #f5f5f5;
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102,126,234,0.2);
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .user-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .user-chevron {
+            font-size: 12px;
+            color: #999;
+        }
+
+        /* Dropdown Menu - Chrome Style */
+        .user-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 8px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            min-width: 280px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.2s ease;
+            z-index: 1001;
+            overflow: hidden;
+        }
+
+        .user-dropdown.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown-header {
+            padding: 16px;
+            background: linear-gradient(135deg, #f8f9fa, #fff);
+            border-bottom: 1px solid #eee;
+        }
+
+        .dropdown-user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .dropdown-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .dropdown-user-details h4 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .dropdown-user-details p {
+            font-size: 11px;
+            color: #888;
+            margin-top: 2px;
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background: #eee;
+            margin: 8px 0;
+        }
+
+        .dropdown-item {
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+            color: #555;
+            font-size: 14px;
+        }
+
+        .dropdown-item:hover {
+            background: #f5f5f5;
+        }
+
+        .dropdown-item i {
+            width: 20px;
+            font-size: 14px;
+            color: #667eea;
+        }
+
+        .dropdown-item.logout-item {
+            color: #f44336;
+            border-top: 1px solid #eee;
+            margin-top: 8px;
+        }
+
+        .dropdown-item.logout-item i {
+            color: #f44336;
+        }
+
+        .role-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 600;
+            margin-top: 4px;
+        }
+
+        .role-badge.student {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .role-badge.admin {
+            background: #fff3e0;
+            color: #ff9800;
+        }
+
+        /* Main Container */
         .app-container {
             max-width: 1400px;
             margin: 0 auto;
+            padding: 20px;
         }
 
-        /* Login Container */
-        .login-container {
+        /* Login Modal (Pop-up) */
+        .auth-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            animation: fadeIn 0.3s;
+        }
+
+        .auth-modal.active {
+            display: flex;
+        }
+
+        .auth-modal-content {
             background: white;
-            border-radius: 30px;
-            padding: 40px;
+            border-radius: 28px;
+            width: 90%;
             max-width: 500px;
-            margin: 50px auto;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            animation: fadeInUp 0.5s ease;
+            max-height: 85vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s;
         }
 
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .auth-modal-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            padding: 20px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 28px 28px 0 0;
         }
 
-        .role-tabs {
+        .auth-modal-header h3 {
+            font-size: 20px;
+        }
+
+        .close-modal-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            color: white;
+            font-size: 18px;
+        }
+
+        .auth-modal-body {
+            padding: 24px;
+        }
+
+        .auth-tabs {
             display: flex;
             gap: 10px;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
         }
 
-        .role-btn {
+        .auth-tab-btn {
             flex: 1;
-            padding: 12px;
+            padding: 10px;
             border: none;
-            border-radius: 50px;
-            font-weight: bold;
+            background: none;
             cursor: pointer;
-            background: #f0f0f0;
+            font-weight: 600;
+            color: #888;
             transition: 0.3s;
-            font-size: 16px;
         }
 
-        .role-btn.active {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            box-shadow: 0 4px 15px rgba(102,126,234,0.3);
+        .auth-tab-btn.active {
+            color: #667eea;
+            border-bottom: 2px solid #667eea;
+            margin-bottom: -12px;
         }
 
-        .auth-form {
+        .auth-form-panel {
             display: none;
         }
 
-        .auth-form input, .auth-form select {
+        .auth-form-panel.active {
+            display: block;
+        }
+
+        .auth-form-panel input, .auth-form-panel select {
             width: 100%;
             padding: 12px 16px;
             margin: 10px 0;
             border-radius: 12px;
             border: 2px solid #e0e0e0;
             font-size: 14px;
-            transition: 0.3s;
         }
 
-        .auth-form input:focus, .auth-form select:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .auth-form button {
+        .auth-form-panel button {
             width: 100%;
             padding: 12px;
             background: linear-gradient(135deg, #667eea, #764ba2);
@@ -123,31 +341,15 @@
             font-weight: bold;
             cursor: pointer;
             margin-top: 10px;
-            font-size: 16px;
-            transition: 0.3s;
         }
 
-        .auth-form button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(102,126,234,0.4);
-        }
-
-        .demo-credentials {
+        .demo-note {
             background: #f8f9fa;
-            padding: 15px;
+            padding: 12px;
             border-radius: 12px;
-            margin-top: 20px;
             font-size: 12px;
-            border-left: 4px solid #667eea;
-        }
-
-        .demo-credentials p {
-            margin: 5px 0;
-            color: #666;
-        }
-
-        .demo-credentials strong {
-            color: #667eea;
+            margin-top: 15px;
+            border-left: 3px solid #667eea;
         }
 
         /* Dashboard Layout */
@@ -155,13 +357,15 @@
             display: none;
         }
 
+        .dashboard.active {
+            display: block;
+        }
+
         .dashboard-layout {
             display: flex;
             gap: 20px;
-            animation: fadeInUp 0.5s ease;
         }
 
-        /* Sidebar */
         .sidebar {
             width: 280px;
             background: white;
@@ -169,7 +373,7 @@
             padding: 25px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.1);
             position: sticky;
-            top: 20px;
+            top: 90px;
             height: fit-content;
         }
 
@@ -186,60 +390,30 @@
             border-radius: 50%;
             margin-bottom: 10px;
             border: 3px solid #667eea;
-            object-fit: cover;
         }
 
         .user-card h4 {
             font-size: 18px;
             color: #333;
-            margin-bottom: 5px;
         }
 
         .user-card p {
             font-size: 12px;
             color: #666;
+            margin: 5px 0;
         }
 
         .menu-item {
             padding: 12px 15px;
             margin: 8px 0;
             border-radius: 12px;
-            cursor: pointer;
-            transition: 0.2s;
             display: flex;
             align-items: center;
             gap: 12px;
-            font-weight: 500;
             color: #555;
+            font-weight: 500;
         }
 
-        .menu-item:hover {
-            background: #f0f0f0;
-            color: #667eea;
-        }
-
-        .menu-item i {
-            width: 24px;
-        }
-
-        .logout-btn {
-            background: linear-gradient(135deg, #ff6b6b, #ff4757);
-            color: white;
-            text-align: center;
-            padding: 12px;
-            border-radius: 12px;
-            cursor: pointer;
-            margin-top: 20px;
-            font-weight: bold;
-            transition: 0.3s;
-        }
-
-        .logout-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(255,71,87,0.3);
-        }
-
-        /* Main Content */
         .main-content {
             flex: 1;
         }
@@ -258,17 +432,14 @@
             background: linear-gradient(135deg, #667eea, #764ba2);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            background-clip: text;
         }
 
         select, button {
             width: 100%;
-            padding: 12px 16px;
+            padding: 12px;
             margin-top: 10px;
             border-radius: 12px;
             border: 2px solid #e0e0e0;
-            font-size: 14px;
-            cursor: pointer;
         }
 
         button {
@@ -276,39 +447,22 @@
             color: white;
             border: none;
             font-weight: bold;
-            transition: 0.3s;
-        }
-
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(102,126,234,0.4);
-        }
-
-        .danger-btn {
-            background: linear-gradient(135deg, #f093fb, #f5576c);
+            cursor: pointer;
         }
 
         .flex-row {
             display: flex;
             gap: 15px;
-            margin-top: 10px;
-        }
-
-        .flex-row select, .flex-row button {
-            margin-top: 0;
-            flex: 1;
         }
 
         .admin-table-wrap {
             overflow-x: auto;
             margin-top: 20px;
-            border-radius: 15px;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            background: white;
         }
 
         th, td {
@@ -321,7 +475,6 @@
         th {
             background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
-            font-weight: 600;
         }
 
         .badge {
@@ -330,8 +483,6 @@
             padding: 4px 10px;
             border-radius: 20px;
             font-size: 11px;
-            font-weight: bold;
-            display: inline-block;
         }
 
         .edit-link, .del-link {
@@ -342,25 +493,11 @@
             border: none;
             margin: 0 3px;
             color: white;
-            display: inline-block;
         }
 
-        .edit-link {
-            background: #ff9800;
-        }
+        .edit-link { background: #ff9800; }
+        .del-link { background: #f44336; }
 
-        .del-link {
-            background: #f44336;
-        }
-
-        .msg-box {
-            padding: 12px;
-            border-radius: 12px;
-            margin-top: 15px;
-            background: #e8f0fe;
-        }
-
-        /* Modal */
         .modal {
             position: fixed;
             inset: 0;
@@ -368,29 +505,19 @@
             display: none;
             justify-content: center;
             align-items: center;
-            z-index: 10000;
-            animation: fadeIn 0.3s;
+            z-index: 1500;
+        }
+
+        .modal.active {
+            display: flex;
         }
 
         .modal-box {
             background: white;
             width: 90%;
             max-width: 1000px;
-            max-height: 90vh;
             border-radius: 25px;
             overflow: hidden;
-            animation: slideUp 0.3s;
-        }
-
-        @keyframes slideUp {
-            from {
-                transform: translateY(50px);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
         }
 
         .modal-top {
@@ -398,18 +525,7 @@
             padding: 15px 20px;
             display: flex;
             justify-content: space-between;
-            align-items: center;
             color: white;
-        }
-
-        .close-modal {
-            background: rgba(255,255,255,0.2);
-            padding: 8px 20px;
-            border-radius: 25px;
-            border: none;
-            color: white;
-            cursor: pointer;
-            width: auto;
         }
 
         iframe {
@@ -418,12 +534,14 @@
             border: none;
         }
 
-        footer {
-            text-align: center;
-            padding: 30px;
-            color: white;
-            opacity: 0.8;
-            font-size: 13px;
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
 
         @media (max-width: 768px) {
@@ -439,562 +557,495 @@
                 flex-direction: column;
             }
         }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
     </style>
 </head>
 <body>
-<div class="demo-badge">
-    <i class="fas fa-flask"></i> DEMO VERSION
-</div>
-
-<div class="app-container">
-    <!-- Login Selection -->
-    <div id="loginSelection" class="login-container">
-        <h2 style="text-align:center; margin-bottom: 20px;">📚 BEU Syllabus Portal</h2>
-        <div class="role-tabs">
-            <button class="role-btn active" id="studentLoginBtn" onclick="showStudentLogin()">👨‍🎓 Student Login</button>
-            <button class="role-btn" id="adminLoginBtn" onclick="showAdminLogin()">👑 Admin Login</button>
-        </div>
-        
-        <!-- Student Login Form -->
-        <div id="studentLoginForm" class="auth-form" style="display:block;">
-            <input type="email" id="studentEmail" placeholder="Student Email" value="student@beu.edu">
-            <input type="password" id="studentPassword" placeholder="Password" value="student123">
-            <button id="studentLoginSubmit">Login as Student</button>
-            <div class="demo-credentials">
-                <p><strong>📢 Demo Credentials:</strong></p>
-                <p>Email: <strong>student@beu.edu</strong> | Password: <strong>student123</strong></p>
-                <p><i class="fas fa-info-circle"></i> Or register a new account below</p>
+    <!-- Chrome-Style Top Bar -->
+    <div class="chrome-top-bar">
+        <div class="logo-area">
+            <div class="logo-icon">
+                <i class="fas fa-book"></i>
             </div>
-            <p style="text-align:center; margin-top:15px;">New student? <a href="#" onclick="showStudentRegister()">Register here</a></p>
+            <div class="app-title">BEU Syllabus Manager</div>
         </div>
-        
-        <!-- Student Register Form -->
-        <div id="studentRegisterForm" class="auth-form">
-            <input type="text" id="studentRegName" placeholder="Full Name" value="Demo Student">
-            <input type="email" id="studentRegEmail" placeholder="Email" value="demo@beu.edu">
-            <input type="password" id="studentRegPassword" placeholder="Password" value="demo123">
-            <input type="text" id="studentRoll" placeholder="Roll Number" value="2024CS001">
-            <select id="studentRegBranch">
-                <option value="">Select Branch</option>
-                <option value="CE">Civil Engineering (CE)</option>
-                <option value="CS" selected>Computer Science (CSE)</option>
-                <option value="IOT">CSE (IOT)</option>
-                <option value="EE">Electrical Engineering (EE)</option>
-                <option value="ECE">Electronics & Communication (ECE)</option>
-                <option value="ME">Mechanical Engineering (ME)</option>
-            </select>
-            <select id="studentRegSem">
-                <option value="">Select Semester</option>
-                <option value="1stNew">1st Semester (New)</option>
-                <option value="2ndNew">2nd Semester (New)</option>
-                <option value="3rdNew" selected>3rd Semester (New)</option>
-                <option value="4th">4th Semester</option>
-                <option value="5th">5th Semester</option>
-                <option value="6th">6th Semester</option>
-                <option value="7th">7th Semester</option>
-                <option value="8th">8th Semester</option>
-            </select>
-            <button id="studentRegisterSubmit">Register New Account</button>
-            <p style="text-align:center; margin-top:15px;">Already have account? <a href="#" onclick="showStudentLogin()">Login</a></p>
-        </div>
-        
-        <!-- Admin Login Form -->
-        <div id="adminLoginForm" class="auth-form">
-            <input type="email" id="adminEmail" placeholder="Admin Email" value="admin@beu.edu">
-            <input type="password" id="adminPassword" placeholder="Password" value="admin123">
-            <button id="adminLoginSubmit">Login as Admin</button>
-            <div class="demo-credentials">
-                <p><strong>📢 Admin Demo Credentials:</strong></p>
-                <p>Email: <strong>admin@beu.edu</strong> | Password: <strong>admin123</strong></p>
-                <p><i class="fas fa-info-circle"></i> Or register new admin with key: <strong>ADMIN2025</strong></p>
+        <div class="user-menu-container">
+            <div class="user-menu-button" id="userMenuBtn">
+                <div class="user-avatar" id="userAvatarIcon">
+                    <i class="fas fa-user"></i>
+                </div>
+                <span class="user-name" id="userNameDisplay">Guest</span>
+                <i class="fas fa-chevron-down user-chevron"></i>
             </div>
-            <p style="text-align:center; margin-top:15px;">New admin? <a href="#" onclick="showAdminRegister()">Register with key</a></p>
-        </div>
-        
-        <!-- Admin Register Form -->
-        <div id="adminRegisterForm" class="auth-form">
-            <input type="email" id="adminRegEmail" placeholder="Admin Email" value="newadmin@beu.edu">
-            <input type="password" id="adminRegPassword" placeholder="Password" value="admin123">
-            <input type="password" id="adminKey" placeholder="Admin Registration Key" value="ADMIN2025">
-            <button id="adminRegisterSubmit">Register Admin</button>
-            <p style="text-align:center; margin-top:15px;"><a href="#" onclick="showAdminLogin()">Back to Login</a></p>
-        </div>
-    </div>
-
-    <!-- Student Dashboard -->
-    <div id="studentDashboard" class="dashboard">
-        <div class="dashboard-layout">
-            <div class="sidebar">
-                <div class="user-card">
-                    <img id="studentAvatar" src="https://ui-avatars.com/api/?background=667eea&color=fff&bold=true&size=80" alt="avatar">
-                    <h4 id="studentName">Student Name</h4>
-                    <p id="studentEmailDisplay">student@beu.edu</p>
-                    <p><i class="fas fa-graduation-cap"></i> Student</p>
-                    <hr style="margin: 10px 0;">
-                    <p><strong>Roll No:</strong> <span id="studentRollDisplay">-</span></p>
-                    <p><strong>Branch:</strong> <span id="studentBranchDisplay">-</span></p>
-                    <p><strong>Semester:</strong> <span id="studentSemDisplay">-</span></p>
-                </div>
-                <div class="menu-item">
-                    <i class="fas fa-book"></i> Syllabus Viewer
-                </div>
-                <div id="studentLogoutBtn" class="logout-btn">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </div>
-            </div>
-            <div class="main-content">
-                <div class="box">
-                    <h2><i class="fas fa-book-open"></i> BEU Syllabus Viewer</h2>
-                    <select id="studentBranchSelect">
-                        <option value="">-- Select Branch --</option>
-                        <option value="CE">Civil Engineering (CE)</option>
-                        <option value="CS">Computer Science (CSE)</option>
-                        <option value="IOT">CSE (IOT)</option>
-                        <option value="EE">Electrical Engineering (EE)</option>
-                        <option value="ECE">Electronics & Communication (ECE)</option>
-                        <option value="ME">Mechanical Engineering (ME)</option>
-                    </select>
-                    <select id="studentSemSelect">
-                        <option value="">-- Select Semester --</option>
-                        <option value="1stNew">1st Semester (New)</option>
-                        <option value="1stOld">1st Semester (Old)</option>
-                        <option value="2ndNew">2nd Semester (New)</option>
-                        <option value="2ndOld">2nd Semester (Old)</option>
-                        <option value="3rdNew">3rd Semester (New)</option>
-                        <option value="3rdOld">3rd Semester (Old)</option>
-                        <option value="4th">4th Semester</option>
-                        <option value="5th">5th Semester</option>
-                        <option value="6th">6th Semester</option>
-                        <option value="7th">7th Semester</option>
-                        <option value="8th">8th Semester</option>
-                    </select>
-                    <button id="studentOpenBtn"><i class="fas fa-search"></i> Open Syllabus</button>
-                    <div id="studentMsg" class="msg-box">
-                        <i class="fas fa-info-circle"></i> Choose branch & semester to view syllabus
+            <div class="user-dropdown" id="userDropdown">
+                <div class="dropdown-header" id="dropdownHeader">
+                    <div class="dropdown-user-info">
+                        <div class="dropdown-avatar" id="dropdownAvatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="dropdown-user-details">
+                            <h4 id="dropdownUserName">Guest User</h4>
+                            <p id="dropdownUserEmail">Not logged in</p>
+                            <span id="dropdownUserRole" class="role-badge"></span>
+                        </div>
                     </div>
                 </div>
+                <div class="dropdown-divider"></div>
+                <div class="dropdown-item" id="studentLoginItem">
+                    <i class="fas fa-graduation-cap"></i>
+                    <span>Student Login</span>
+                </div>
+                <div class="dropdown-item" id="studentRegisterItem">
+                    <i class="fas fa-user-plus"></i>
+                    <span>Student Register</span>
+                </div>
+                <div class="dropdown-divider"></div>
+                <div class="dropdown-item" id="adminLoginItem">
+                    <i class="fas fa-crown"></i>
+                    <span>Admin Login</span>
+                </div>
+                <div class="dropdown-item" id="adminRegisterItem">
+                    <i class="fas fa-key"></i>
+                    <span>Admin Register</span>
+                </div>
+                <div class="dropdown-item logout-item" id="logoutItem" style="display: none;">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Admin Dashboard -->
-    <div id="adminDashboard" class="dashboard">
-        <div class="dashboard-layout">
-            <div class="sidebar">
-                <div class="user-card">
-                    <img id="adminAvatar" src="https://ui-avatars.com/api/?background=764ba2&color=fff&bold=true&size=80" alt="avatar">
-                    <h4 id="adminName">Administrator</h4>
-                    <p id="adminEmailDisplay">admin@beu.edu</p>
-                    <p><i class="fas fa-crown"></i> Administrator</p>
+    <div class="app-container">
+        <!-- Student Dashboard -->
+        <div id="studentDashboard" class="dashboard">
+            <div class="dashboard-layout">
+                <div class="sidebar">
+                    <div class="user-card">
+                        <img id="studentAvatar" src="https://ui-avatars.com/api/?background=667eea&color=fff&bold=true&size=80" alt="avatar">
+                        <h4 id="studentName">Student Name</h4>
+                        <p id="studentEmail">student@beu.edu</p>
+                        <p><strong>Roll No:</strong> <span id="studentRoll">-</span></p>
+                        <p><strong>Branch:</strong> <span id="studentBranch">-</span></p>
+                        <p><strong>Semester:</strong> <span id="studentSem">-</span></p>
+                    </div>
+                    <div class="menu-item">
+                        <i class="fas fa-book"></i> Syllabus Viewer
+                    </div>
                 </div>
-                <div class="menu-item">
-                    <i class="fas fa-database"></i> Syllabus Manager
-                </div>
-                <div id="adminLogoutBtn" class="logout-btn">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </div>
-            </div>
-            <div class="main-content">
-                <div class="box">
-                    <h2><i class="fas fa-tools"></i> Admin Dashboard — PDF Management</h2>
-                    <div class="flex-row">
-                        <select id="adminSem">
-                            <option value="">-- Semester --</option>
-                            <option value="1stNew">1st New</option><option value="1stOld">1st Old</option>
-                            <option value="2ndNew">2nd New</option><option value="2ndOld">2nd Old</option>
-                            <option value="3rdNew">3rd New</option><option value="3rdOld">3rd Old</option>
-                            <option value="4th">4th</option><option value="5th">5th</option>
-                            <option value="6th">6th</option><option value="7th">7th</option><option value="8th">8th</option>
+                <div class="main-content">
+                    <div class="box">
+                        <h2><i class="fas fa-book-open"></i> BEU Syllabus Viewer</h2>
+                        <select id="studentBranchSelect">
+                            <option value="">-- Select Branch --</option>
+                            <option value="CE">Civil Engineering</option>
+                            <option value="CS">Computer Science</option>
+                            <option value="IOT">CSE (IOT)</option>
+                            <option value="EE">Electrical Engineering</option>
+                            <option value="ECE">Electronics & Communication</option>
+                            <option value="ME">Mechanical Engineering</option>
                         </select>
-                        <select id="adminBranch">
-                            <option value="">-- Branch --</option>
-                            <option value="CE">CE</option><option value="CS">CS</option>
-                            <option value="IOT">IOT</option><option value="EE">EE</option>
-                            <option value="ECE">ECE</option><option value="ME">ME</option>
+                        <select id="studentSemSelect">
+                            <option value="">-- Select Semester --</option>
+                            <option value="1stNew">1st Semester (New)</option>
+                            <option value="1stOld">1st Semester (Old)</option>
+                            <option value="2ndNew">2nd Semester (New)</option>
+                            <option value="2ndOld">2nd Semester (Old)</option>
+                            <option value="3rdNew">3rd Semester (New)</option>
+                            <option value="3rdOld">3rd Semester (Old)</option>
+                            <option value="4th">4th Semester</option>
+                            <option value="5th">5th Semester</option>
+                            <option value="6th">6th Semester</option>
+                            <option value="7th">7th Semester</option>
+                            <option value="8th">8th Semester</option>
                         </select>
+                        <button id="studentOpenBtn"><i class="fas fa-search"></i> Open Syllabus</button>
+                        <div id="studentMsg" style="padding:12px; background:#e8f0fe; border-radius:12px; margin-top:15px;">
+                            <i class="fas fa-info-circle"></i> Choose branch & semester to view syllabus
+                        </div>
                     </div>
-                    <input type="text" id="pdfUrlInput" placeholder="PDF Embed Link (Google Drive preview or direct PDF URL)">
-                    <div class="flex-row">
-                        <button id="savePdfBtn"><i class="fas fa-save"></i> Save / Update</button>
-                        <button id="deletePdfBtn" class="danger-btn"><i class="fas fa-trash"></i> Delete Entry</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Dashboard -->
+        <div id="adminDashboard" class="dashboard">
+            <div class="dashboard-layout">
+                <div class="sidebar">
+                    <div class="user-card">
+                        <img id="adminAvatar" src="https://ui-avatars.com/api/?background=764ba2&color=fff&bold=true&size=80" alt="avatar">
+                        <h4 id="adminName">Administrator</h4>
+                        <p id="adminEmail">admin@beu.edu</p>
+                        <p><i class="fas fa-crown"></i> Administrator</p>
                     </div>
-                    <div id="adminMsg" class="msg-box" style="display:none;"></div>
-                    <div class="admin-table-wrap">
-                        <table>
-                            <thead>
-                                <tr><th>Semester</th><th>Branch</th><th>PDF Link</th><th>Actions</th></tr>
-                            </thead>
-                            <tbody id="adminTableBody">
-                                <tr><td colspan="4" style="text-align:center;">Loading syllabus data...</td></tr>
-                            </tbody>
-                        </table>
+                    <div class="menu-item">
+                        <i class="fas fa-database"></i> Syllabus Manager
                     </div>
-                    <button id="resetDefaultBtn" style="background: #ff9800; margin-top: 15px;"><i class="fas fa-sync-alt"></i> Reset to Default Syllabus</button>
+                </div>
+                <div class="main-content">
+                    <div class="box">
+                        <h2><i class="fas fa-tools"></i> Admin Dashboard — PDF Management</h2>
+                        <div class="flex-row">
+                            <select id="adminSem"><option value="">Semester</option><option value="1stNew">1st New</option><option value="1stOld">1st Old</option><option value="2ndNew">2nd New</option><option value="2ndOld">2nd Old</option><option value="3rdNew">3rd New</option><option value="3rdOld">3rd Old</option><option value="4th">4th</option><option value="5th">5th</option><option value="6th">6th</option><option value="7th">7th</option><option value="8th">8th</option></select>
+                            <select id="adminBranch"><option value="">Branch</option><option value="CE">CE</option><option value="CS">CS</option><option value="IOT">IOT</option><option value="EE">EE</option><option value="ECE">ECE</option><option value="ME">ME</option></select>
+                        </div>
+                        <input type="text" id="pdfUrlInput" placeholder="PDF Embed Link">
+                        <div class="flex-row">
+                            <button id="savePdfBtn"><i class="fas fa-save"></i> Save</button>
+                            <button id="deletePdfBtn" class="del-link" style="background:#f44336;"><i class="fas fa-trash"></i> Delete</button>
+                        </div>
+                        <div id="adminMsg" style="padding:12px; border-radius:12px; margin-top:10px; display:none;"></div>
+                        <div class="admin-table-wrap">
+                            <table><thead><tr><th>Semester</th><th>Branch</th><th>PDF Link</th><th>Actions</th></tr></thead><tbody id="adminTableBody"></tbody></table>
+                        </div>
+                        <button id="resetDefaultBtn" style="background:#ff9800; margin-top:15px;"><i class="fas fa-sync-alt"></i> Reset to Default</button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-    
-    <footer>
-        <p>© 2025 BEU Syllabus Demo | Student & Admin Login System | <i class="fas fa-flask"></i> Demo Version with Local Storage</p>
-    </footer>
-</div>
 
-<!-- PDF Modal -->
-<div id="pdfModal" class="modal" onclick="closePDFModalOnBg(event)">
-    <div class="modal-box">
-        <div class="modal-top">
-            <strong><i class="fas fa-file-pdf"></i> Syllabus PDF Preview</strong>
-            <button class="close-modal" onclick="closePDFModal()">Close</button>
+    <!-- Auth Modal -->
+    <div id="authModal" class="auth-modal">
+        <div class="auth-modal-content">
+            <div class="auth-modal-header">
+                <h3 id="modalTitle">Student Login</h3>
+                <button class="close-modal-btn" onclick="closeAuthModal()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="auth-modal-body">
+                <div class="auth-tabs" id="authTabs"></div>
+                <div id="authFormContainer"></div>
+            </div>
         </div>
-        <iframe id="pdfFrame" title="Syllabus PDF"></iframe>
     </div>
-</div>
 
-<script>
-    // ============ DEMO DATABASE (Local Storage) ============
-    let syllabusDB = {};
-    let usersDB = {};
-    
-    // Default Syllabus Data
-    const DEFAULT_SYLLABUS = {
-        "1stNew": { "CE": "https://drive.google.com/file/d/1Qd3X732fBWyEax1GTudkBWn7fpe57CgA/preview", "CS": "https://drive.google.com/file/d/1Zp-UAEgj72UstczPS_wSIBtlPU48USal/preview", "EE": "https://drive.google.com/file/d/1dZCtmM7w3H9dRpsWMlDhhJZNvFOiA1up/preview", "ECE": "https://drive.google.com/file/d/14cLD5aiYQp_2U3qKN16pa7U4fowBMg3J/preview", "ME": "https://drive.google.com/file/d/1yYB-UOYnpkOCYspJeZv83o7Rjy3wfcB8/preview" },
-        "1stOld": { "CE": "https://drive.google.com/file/d/1iRWghHRyCP6WPZ3Xoc0DdScIytir3xRn/preview", "CS": "https://drive.google.com/file/d/1EHpLPUo0_7086gFmk2WRZv2fMw93Jcdb/preview", "EE": "https://drive.google.com/file/d/1BtS61CEIOidszDe5FLBVQUake_8RQZlK/preview", "ECE": "https://drive.google.com/file/d/1t57gqcXtYajz6p5q6FXtcBVPb-mUgX1m/preview", "ME": "https://drive.google.com/file/d/1gyWaJKhhcZNmSF9WlWfqRXfnTeA87hvY/preview" },
-        "2ndNew": { "CE": "https://drive.google.com/file/d/13q_AFXP9e2AWyHHtHWp_Fm4bRgtME3qv/preview", "CS": "https://drive.google.com/file/d/15Y2Vsq8xe3Cl2Sc4BcXtL4XQMsqwKIFh/preview", "EE": "https://drive.google.com/file/d/1wgmEj8RSBWleYUZ1JjzD7tICuiQgJEDW/preview", "ECE": "https://drive.google.com/file/d/1THqchJygHP7BVVQjj-kf4YmMHBrjfA_x/preview", "ME": "https://drive.google.com/file/d/1hhAgOvC2LvbBRv6f7n1MSHPxD9MBVgsy/preview" },
-        "2ndOld": { "CE": "https://drive.google.com/file/d/1jW97lTtufHT26vkRP6KISUiKWSYe6F3o/preview", "CS": "https://drive.google.com/file/d/16JynS8hA5JtsSlIc3-HBUPqI9o1F2ziN/preview", "EE": "https://drive.google.com/file/d/1CrAHd-0bwzESjiLtb-AQwOeKtopyiJm9/preview", "ECE": "https://drive.google.com/file/d/1eJQJy3I853QoqfNzOT5XFUgncJKxbnv6/preview", "ME": "https://drive.google.com/file/d/1xwhvlJIQJRCqKLCPTKeOOdjzkUgr8S5U/preview" },
-        "3rdNew": { "CE": "https://drive.google.com/file/d/1GzMwwCkUrHPmc5fgyWOxOSsPof9dQZO8/preview", "CS": "https://drive.google.com/file/d/18tjQnI2qGtbSzRWEp08KqKY4gDvE25em/preview", "IOT": "https://drive.google.com/file/d/1DyoqlnntdtG-RA0ET1wH4FrR-DOB3mtF/preview", "EE": "https://drive.google.com/file/d/1nKpL1rXXa7EGJqbvDkmEem1uh74QWjOU/preview", "ECE": "https://drive.google.com/file/d/1kWy1_zhggLM9U4jrkTzGWNdLcE-4QXMr/preview", "ME": "https://drive.google.com/file/d/14yS8pyf83vIA1vs-_DbAvWbYpF8y6gc9/preview" },
-        "3rdOld": { "CE": "https://drive.google.com/file/d/1IS4EV9JvOfoLW3cYRW7U-qBkXyRAvFlD/preview", "CS": "https://drive.google.com/file/d/1ZlU22NFGirTuV01jKYiG9zdSU_IO29-t/preview", "EE": "https://drive.google.com/file/d/1D2gAZlW299s9f60wcdicGSZK7DpZVXkc/preview", "ECE": "https://drive.google.com/file/d/1auOpeh5UX4E23rnxIQo1K9TdFrqSXrm0/preview", "ME": "https://drive.google.com/file/d/1XE_l1tfHGZHMDIxU6KNlcjlqiKxKN-ZW/preview" },
-        "4th": { "CE": "https://drive.google.com/file/d/17w5zTFNaWUOg7S_vUrqW_AxtMyf7bPdU/preview", "CS": "https://drive.google.com/file/d/1ODCj6Omx6dUuHR-Cmwh4iu37TaMQyTLn/preview", "EE": "https://drive.google.com/file/d/1G-cJOckwjZRoaDz0Nnw-CphpqBcZztA7/preview", "ECE": "https://drive.google.com/file/d/1nkfp0xRno6_ybJSWqZ6_ryiwI4aNsjXh/preview", "ME": "https://drive.google.com/file/d/1jVvYbUmth-RIbhLBXbDf3ooB8zgz8fSc/preview" },
-        "5th": { "CE": "https://drive.google.com/file/d/1tGXDItZ5g-AsnsXN0KmMifbA36vgxA0C/preview", "CS": "https://drive.google.com/file/d/1SZdAT8a1vrIfrMPYjl0Q-0cc3hBba3z3/preview", "EE": "https://drive.google.com/file/d/1MA_tDBF7Fuvg8OGgn8bzg4mHSUTmQ-dC/preview", "ECE": "https://drive.google.com/file/d/1dJV_E7tPdhmmA7IutIDeaDMz3rxYb9XR/preview", "ME": "https://drive.google.com/file/d/1FW1-YDLvthfdG52szzsLzTIU9DOI03bc/preview" },
-        "6th": { "CE": "https://drive.google.com/file/d/1MxzSoTSdMgCvgCPiDFsDjVuu4QaJCQge/preview", "CS": "https://drive.google.com/file/d/1ckXxGY5kdHmxlAIGsq-NfDskA4Mj_xQj/preview", "EE": "https://drive.google.com/file/d/1obhgEQmyRzDg1XPG7Gc6u5SyMugXN9bn/preview", "ECE": "https://drive.google.com/file/d/1reUmWqura-4UnEx7tpjv6wANADxvW_lc/preview", "ME": "https://drive.google.com/file/d/19UDBkvdYqgMqRzV_Fgre8vq8utOapy2q/preview" },
-        "7th": { "CE": "https://drive.google.com/file/d/1Qy64E3CCdfhQvD8PaihwPDFVz2FwDqGr/preview", "CS": "https://drive.google.com/file/d/1uW4HVIaLErhWIyj36Lday4JMH1ZfuLEp/preview", "EE": "https://drive.google.com/file/d/1ey1jhsveL-eO0gc0FgwlNs7U05qRQHp5/preview", "ECE": "https://drive.google.com/file/d/1aDSSzOz8kWsmO0oJV7Z5CZ2lnCXReEqq/preview", "ME": "https://drive.google.com/file/d/1kMv43ZFJMctH_iRYbI230GCNN4UkZYud/preview" },
-        "8th": { "EE": "https://drive.google.com/file/d/1BwL_f3KCmWzuEulEth3G3hQw5sxLvBOy/preview", "ME": "https://drive.google.com/file/d/1PPkfTohITDMkIFNuw836gSOSUjCFtt3n/preview" }
-    };
-    
-    // Initialize Data
-    function initData() {
-        let storedSyllabus = localStorage.getItem('beu_syllabus_demo');
-        if (!storedSyllabus) {
-            syllabusDB = JSON.parse(JSON.stringify(DEFAULT_SYLLABUS));
-            localStorage.setItem('beu_syllabus_demo', JSON.stringify(syllabusDB));
-        } else {
-            syllabusDB = JSON.parse(storedSyllabus);
-        }
-        
-        let storedUsers = localStorage.getItem('beu_users_demo');
-        if (!storedUsers) {
-            usersDB = {
-                "student@beu.edu": { name: "Demo Student", email: "student@beu.edu", password: "student123", role: "student", rollNo: "2024CS001", branch: "CS", semester: "3rdNew" },
-                "admin@beu.edu": { name: "Administrator", email: "admin@beu.edu", password: "admin123", role: "admin" }
-            };
-            localStorage.setItem('beu_users_demo', JSON.stringify(usersDB));
-        } else {
-            usersDB = JSON.parse(storedUsers);
-        }
-    }
-    
-    function saveSyllabus() {
-        localStorage.setItem('beu_syllabus_demo', JSON.stringify(syllabusDB));
-    }
-    
-    function saveUsers() {
-        localStorage.setItem('beu_users_demo', JSON.stringify(usersDB));
-    }
-    
-    let currentUser = null;
-    let currentRole = null;
-    
-    // Student Functions
-    function studentLogin(email, password) {
-        if (usersDB[email] && usersDB[email].password === password && usersDB[email].role === 'student') {
-            currentUser = usersDB[email];
-            currentRole = 'student';
-            showStudentDashboard();
-            return true;
-        }
-        return false;
-    }
-    
-    function studentRegister(name, email, password, rollNo, branch, semester) {
-        if (usersDB[email]) return false;
-        usersDB[email] = { name, email, password, role: 'student', rollNo, branch, semester };
-        saveUsers();
-        return true;
-    }
-    
-    function adminLogin(email, password) {
-        if (usersDB[email] && usersDB[email].password === password && usersDB[email].role === 'admin') {
-            currentUser = usersDB[email];
-            currentRole = 'admin';
-            showAdminDashboard();
-            return true;
-        }
-        return false;
-    }
-    
-    function adminRegister(email, password, key) {
-        if (key !== 'ADMIN2025') return false;
-        if (usersDB[email]) return false;
-        usersDB[email] = { name: "Administrator", email, password, role: 'admin' };
-        saveUsers();
-        return true;
-    }
-    
-    function logout() {
-        currentUser = null;
-        currentRole = null;
-        document.getElementById('loginSelection').style.display = 'block';
-        document.getElementById('studentDashboard').style.display = 'none';
-        document.getElementById('adminDashboard').style.display = 'none';
-    }
-    
-    function showStudentDashboard() {
-        document.getElementById('loginSelection').style.display = 'none';
-        document.getElementById('studentDashboard').style.display = 'block';
-        document.getElementById('adminDashboard').style.display = 'none';
-        
-        document.getElementById('studentName').innerText = currentUser.name;
-        document.getElementById('studentEmailDisplay').innerText = currentUser.email;
-        document.getElementById('studentRollDisplay').innerText = currentUser.rollNo || '-';
-        document.getElementById('studentBranchDisplay').innerText = currentUser.branch || '-';
-        document.getElementById('studentSemDisplay').innerText = currentUser.semester || '-';
-        document.getElementById('studentAvatar').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.name)}&background=667eea&color=fff&bold=true&size=80`;
-    }
-    
-    function showAdminDashboard() {
-        document.getElementById('loginSelection').style.display = 'none';
-        document.getElementById('studentDashboard').style.display = 'none';
-        document.getElementById('adminDashboard').style.display = 'block';
-        
-        document.getElementById('adminName').innerText = currentUser.name;
-        document.getElementById('adminEmailDisplay').innerText = currentUser.email;
-        document.getElementById('adminAvatar').src = `https://ui-avatars.com/api/?name=Admin&background=764ba2&color=fff&bold=true&size=80`;
-        renderAdminTable();
-    }
-    
-    function renderAdminTable() {
-        const tbody = document.getElementById('adminTableBody');
-        if (!tbody) return;
-        let html = '';
-        const semesters = Object.keys(syllabusDB).sort();
-        for (let sem of semesters) {
-            for (let branch of Object.keys(syllabusDB[sem])) {
-                const link = syllabusDB[sem][branch];
-                html += `<tr><td><span class="badge">${sem}</span></td><td><strong>${branch}</strong></td><td><a href="${link}" target="_blank" style="font-size:11px;">${link.substring(0, 50)}...</a></td><td><button class="edit-link" onclick="editEntry('${sem}','${branch}','${link.replace(/'/g, "\\'")}')">✏️ Edit</button><button class="del-link" onclick="deleteEntry('${sem}','${branch}')">🗑️ Del</button></td></tr>`;
+    <!-- PDF Modal -->
+    <div id="pdfModal" class="modal">
+        <div class="modal-box">
+            <div class="modal-top">
+                <strong><i class="fas fa-file-pdf"></i> Syllabus PDF</strong>
+                <button class="close-modal-btn" onclick="closePDFModal()"><i class="fas fa-times"></i></button>
+            </div>
+            <iframe id="pdfFrame"></iframe>
+        </div>
+    </div>
+
+    <script>
+        // Demo Database
+        let syllabusDB = {};
+        let usersDB = {};
+
+        const DEFAULT_SYLLABUS = {
+            "1stNew": { "CE": "https://drive.google.com/file/d/1Qd3X732fBWyEax1GTudkBWn7fpe57CgA/preview", "CS": "https://drive.google.com/file/d/1Zp-UAEgj72UstczPS_wSIBtlPU48USal/preview" },
+            "2ndNew": { "CE": "https://drive.google.com/file/d/13q_AFXP9e2AWyHHtHWp_Fm4bRgtME3qv/preview", "CS": "https://drive.google.com/file/d/15Y2Vsq8xe3Cl2Sc4BcXtL4XQMsqwKIFh/preview" },
+            "3rdNew": { "CE": "https://drive.google.com/file/d/1GzMwwCkUrHPmc5fgyWOxOSsPof9dQZO8/preview", "CS": "https://drive.google.com/file/d/18tjQnI2qGtbSzRWEp08KqKY4gDvE25em/preview", "IOT": "https://drive.google.com/file/d/1DyoqlnntdtG-RA0ET1wH4FrR-DOB3mtF/preview" },
+            "4th": { "CE": "https://drive.google.com/file/d/17w5zTFNaWUOg7S_vUrqW_AxtMyf7bPdU/preview", "CS": "https://drive.google.com/file/d/1ODCj6Omx6dUuHR-Cmwh4iu37TaMQyTLn/preview" }
+        };
+
+        function initData() {
+            let stored = localStorage.getItem('beu_syllabus_demo');
+            syllabusDB = stored ? JSON.parse(stored) : JSON.parse(JSON.stringify(DEFAULT_SYLLABUS));
+            
+            let storedUsers = localStorage.getItem('beu_users_demo');
+            if (!storedUsers) {
+                usersDB = {
+                    "student@beu.edu": { name: "Demo Student", email: "student@beu.edu", password: "student123", role: "student", rollNo: "2024CS001", branch: "CS", semester: "3rdNew" },
+                    "admin@beu.edu": { name: "Administrator", email: "admin@beu.edu", password: "admin123", role: "admin" }
+                };
+                localStorage.setItem('beu_users_demo', JSON.stringify(usersDB));
+            } else {
+                usersDB = JSON.parse(storedUsers);
             }
         }
-        if (html === '') html = '<tr><td colspan="4" style="text-align:center;">No entries found</td></tr>';
-        tbody.innerHTML = html;
-    }
-    
-    window.editEntry = function(sem, branch, link) {
-        document.getElementById('adminSem').value = sem;
-        document.getElementById('adminBranch').value = branch;
-        document.getElementById('pdfUrlInput').value = link;
-        showAdminMsg('Editing: ' + sem + ' - ' + branch, '#e3f2fd');
-    };
-    
-    window.deleteEntry = function(sem, branch) {
-        if (confirm(`Delete ${sem} - ${branch}?`)) {
-            if (syllabusDB[sem] && syllabusDB[sem][branch]) {
+
+        let currentUser = null;
+
+        function updateUserMenu() {
+            if (currentUser) {
+                document.getElementById('userNameDisplay').innerText = currentUser.name.split(' ')[0];
+                document.getElementById('userAvatarIcon').innerHTML = `<i class="fas fa-${currentUser.role === 'admin' ? 'crown' : 'user-graduate'}"></i>`;
+                document.getElementById('dropdownUserName').innerText = currentUser.name;
+                document.getElementById('dropdownUserEmail').innerText = currentUser.email;
+                const roleBadge = document.getElementById('dropdownUserRole');
+                roleBadge.innerText = currentUser.role === 'admin' ? 'Administrator' : 'Student';
+                roleBadge.className = `role-badge ${currentUser.role}`;
+                document.getElementById('dropdownAvatar').innerHTML = `<i class="fas fa-${currentUser.role === 'admin' ? 'crown' : 'user-graduate'}"></i>`;
+                document.getElementById('studentLoginItem').style.display = 'none';
+                document.getElementById('studentRegisterItem').style.display = 'none';
+                document.getElementById('adminLoginItem').style.display = 'none';
+                document.getElementById('adminRegisterItem').style.display = 'none';
+                document.getElementById('logoutItem').style.display = 'flex';
+            } else {
+                document.getElementById('userNameDisplay').innerText = 'Guest';
+                document.getElementById('userAvatarIcon').innerHTML = '<i class="fas fa-user"></i>';
+                document.getElementById('dropdownUserName').innerText = 'Guest User';
+                document.getElementById('dropdownUserEmail').innerText = 'Not logged in';
+                document.getElementById('dropdownUserRole').innerHTML = '';
+                document.getElementById('dropdownAvatar').innerHTML = '<i class="fas fa-user"></i>';
+                document.getElementById('studentLoginItem').style.display = 'flex';
+                document.getElementById('studentRegisterItem').style.display = 'flex';
+                document.getElementById('adminLoginItem').style.display = 'flex';
+                document.getElementById('adminRegisterItem').style.display = 'flex';
+                document.getElementById('logoutItem').style.display = 'none';
+            }
+        }
+
+        function showDashboard(role) {
+            document.getElementById('studentDashboard').classList.remove('active');
+            document.getElementById('adminDashboard').classList.remove('active');
+            if (role === 'student') {
+                document.getElementById('studentDashboard').classList.add('active');
+                document.getElementById('studentName').innerText = currentUser.name;
+                document.getElementById('studentEmail').innerText = currentUser.email;
+                document.getElementById('studentRoll').innerText = currentUser.rollNo || '-';
+                document.getElementById('studentBranch').innerText = currentUser.branch || '-';
+                document.getElementById('studentSem').innerText = currentUser.semester || '-';
+                document.getElementById('studentAvatar').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.name)}&background=667eea&color=fff&bold=true&size=80`;
+            } else if (role === 'admin') {
+                document.getElementById('adminDashboard').classList.add('active');
+                document.getElementById('adminName').innerText = currentUser.name;
+                document.getElementById('adminEmail').innerText = currentUser.email;
+                renderAdminTable();
+            }
+        }
+
+        function renderAdminTable() {
+            const tbody = document.getElementById('adminTableBody');
+            let html = '';
+            for (let sem of Object.keys(syllabusDB).sort()) {
+                for (let branch of Object.keys(syllabusDB[sem])) {
+                    html += `<tr><td><span class="badge">${sem}</span></td><td><strong>${branch}</strong></td><td><a href="${syllabusDB[sem][branch]}" target="_blank">${syllabusDB[sem][branch].substring(0, 50)}...</a></td><td><button class="edit-link" onclick="editEntry('${sem}','${branch}')">Edit</button><button class="del-link" onclick="deleteEntry('${sem}','${branch}')">Del</button></td></tr>`;
+                }
+            }
+            tbody.innerHTML = html || '<tr><td colspan="4">No entries</td></tr>';
+        }
+
+        window.editEntry = (sem, branch) => {
+            document.getElementById('adminSem').value = sem;
+            document.getElementById('adminBranch').value = branch;
+            document.getElementById('pdfUrlInput').value = syllabusDB[sem][branch];
+            showAdminMsg('Editing: ' + sem + ' - ' + branch, '#e3f2fd');
+        };
+
+        window.deleteEntry = (sem, branch) => {
+            if (confirm('Delete?')) {
                 delete syllabusDB[sem][branch];
                 if (Object.keys(syllabusDB[sem]).length === 0) delete syllabusDB[sem];
-                saveSyllabus();
+                localStorage.setItem('beu_syllabus_demo', JSON.stringify(syllabusDB));
                 renderAdminTable();
-                showAdminMsg('Deleted successfully', '#ffcdd2');
+                showAdminMsg('Deleted!', '#ffcdd2');
             }
+        };
+
+        function showAdminMsg(msg, bg) {
+            const div = document.getElementById('adminMsg');
+            div.style.display = 'block';
+            div.style.background = bg;
+            div.innerHTML = msg;
+            setTimeout(() => div.style.display = 'none', 3000);
         }
-    };
-    
-    function savePdf() {
-        const sem = document.getElementById('adminSem').value;
-        const branch = document.getElementById('adminBranch').value;
-        const url = document.getElementById('pdfUrlInput').value.trim();
-        if (!sem || !branch) { showAdminMsg('Select Semester & Branch!', '#ffcdd2'); return; }
-        if (!url) { showAdminMsg('Enter PDF link!', '#ffcdd2'); return; }
-        if (!syllabusDB[sem]) syllabusDB[sem] = {};
-        syllabusDB[sem][branch] = url;
-        saveSyllabus();
-        renderAdminTable();
-        showAdminMsg('Saved successfully!', '#c8e6c9');
-        document.getElementById('pdfUrlInput').value = '';
-    }
-    
-    function deletePdf() {
-        const sem = document.getElementById('adminSem').value;
-        const branch = document.getElementById('adminBranch').value;
-        if (!sem || !branch) { showAdminMsg('Select Semester & Branch!', '#ffcdd2'); return; }
-        if (syllabusDB[sem] && syllabusDB[sem][branch]) {
-            delete syllabusDB[sem][branch];
-            if (Object.keys(syllabusDB[sem]).length === 0) delete syllabusDB[sem];
-            saveSyllabus();
+
+        // Auth Functions
+        function studentLogin(email, password) {
+            if (usersDB[email] && usersDB[email].password === password && usersDB[email].role === 'student') {
+                currentUser = usersDB[email];
+                updateUserMenu();
+                showDashboard('student');
+                closeAuthModal();
+                return true;
+            }
+            return false;
+        }
+
+        function studentRegister(data) {
+            if (usersDB[data.email]) return false;
+            usersDB[data.email] = { ...data, role: 'student' };
+            localStorage.setItem('beu_users_demo', JSON.stringify(usersDB));
+            return true;
+        }
+
+        function adminLogin(email, password) {
+            if (usersDB[email] && usersDB[email].password === password && usersDB[email].role === 'admin') {
+                currentUser = usersDB[email];
+                updateUserMenu();
+                showDashboard('admin');
+                closeAuthModal();
+                return true;
+            }
+            return false;
+        }
+
+        function adminRegister(email, password, key) {
+            if (key !== 'ADMIN2025') return false;
+            if (usersDB[email]) return false;
+            usersDB[email] = { name: 'Administrator', email, password, role: 'admin' };
+            localStorage.setItem('beu_users_demo', JSON.stringify(usersDB));
+            return true;
+        }
+
+        function logout() {
+            currentUser = null;
+            updateUserMenu();
+            document.getElementById('studentDashboard').classList.remove('active');
+            document.getElementById('adminDashboard').classList.remove('active');
+        }
+
+        // Modal Management
+        let currentModalType = '';
+
+        function openAuthModal(type) {
+            currentModalType = type;
+            document.getElementById('modalTitle').innerText = type === 'student' ? 'Student Account' : 'Admin Account';
+            const tabsContainer = document.getElementById('authTabs');
+            const formsContainer = document.getElementById('authFormContainer');
+            
+            if (type === 'student') {
+                tabsContainer.innerHTML = `<button class="auth-tab-btn active" onclick="switchAuthTab('login')">Login</button><button class="auth-tab-btn" onclick="switchAuthTab('register')">Register</button>`;
+                formsContainer.innerHTML = `
+                    <div id="authLoginPanel" class="auth-form-panel active">
+                        <input type="email" id="studentLoginEmail" placeholder="Email" value="student@beu.edu">
+                        <input type="password" id="studentLoginPassword" placeholder="Password" value="student123">
+                        <button onclick="doStudentLogin()">Login as Student</button>
+                        <div class="demo-note"><i class="fas fa-info-circle"></i> Demo: student@beu.edu / student123</div>
+                    </div>
+                    <div id="authRegisterPanel" class="auth-form-panel">
+                        <input type="text" id="studentRegName" placeholder="Full Name" value="New Student">
+                        <input type="email" id="studentRegEmail" placeholder="Email" value="new@beu.edu">
+                        <input type="password" id="studentRegPassword" placeholder="Password" value="pass123">
+                        <input type="text" id="studentRegRoll" placeholder="Roll Number" value="2024CS999">
+                        <select id="studentRegBranch"><option>CS</option><option>CE</option><option>EE</option><option>ECE</option><option>ME</option></select>
+                        <select id="studentRegSem"><option>3rdNew</option><option>4th</option><option>5th</option></select>
+                        <button onclick="doStudentRegister()">Register</button>
+                    </div>
+                `;
+            } else {
+                tabsContainer.innerHTML = `<button class="auth-tab-btn active" onclick="switchAuthTab('login')">Login</button><button class="auth-tab-btn" onclick="switchAuthTab('register')">Register</button>`;
+                formsContainer.innerHTML = `
+                    <div id="authLoginPanel" class="auth-form-panel active">
+                        <input type="email" id="adminLoginEmail" placeholder="Email" value="admin@beu.edu">
+                        <input type="password" id="adminLoginPassword" placeholder="Password" value="admin123">
+                        <button onclick="doAdminLogin()">Login as Admin</button>
+                        <div class="demo-note"><i class="fas fa-info-circle"></i> Demo: admin@beu.edu / admin123</div>
+                    </div>
+                    <div id="authRegisterPanel" class="auth-form-panel">
+                        <input type="email" id="adminRegEmail" placeholder="Email" value="newadmin@beu.edu">
+                        <input type="password" id="adminRegPassword" placeholder="Password" value="admin123">
+                        <input type="password" id="adminRegKey" placeholder="Admin Key" value="ADMIN2025">
+                        <button onclick="doAdminRegister()">Register Admin</button>
+                        <div class="demo-note"><i class="fas fa-key"></i> Registration Key: ADMIN2025</div>
+                    </div>
+                `;
+            }
+            document.getElementById('authModal').classList.add('active');
+        }
+
+        window.switchAuthTab = (tab) => {
+            document.querySelectorAll('.auth-tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('authLoginPanel').classList.remove('active');
+            document.getElementById('authRegisterPanel').classList.remove('active');
+            document.getElementById(`auth${tab === 'login' ? 'Login' : 'Register'}Panel`).classList.add('active');
+        };
+
+        window.doStudentLogin = () => {
+            const email = document.getElementById('studentLoginEmail').value;
+            const pass = document.getElementById('studentLoginPassword').value;
+            if (studentLogin(email, pass)) alert('Login successful!');
+            else alert('Invalid credentials!');
+        };
+
+        window.doStudentRegister = () => {
+            const data = {
+                name: document.getElementById('studentRegName').value,
+                email: document.getElementById('studentRegEmail').value,
+                password: document.getElementById('studentRegPassword').value,
+                rollNo: document.getElementById('studentRegRoll').value,
+                branch: document.getElementById('studentRegBranch').value,
+                semester: document.getElementById('studentRegSem').value
+            };
+            if (studentRegister(data)) { alert('Registration successful! Please login.'); switchAuthTab('login'); }
+            else alert('Email already exists!');
+        };
+
+        window.doAdminLogin = () => {
+            const email = document.getElementById('adminLoginEmail').value;
+            const pass = document.getElementById('adminLoginPassword').value;
+            if (adminLogin(email, pass)) alert('Admin login successful!');
+            else alert('Invalid credentials!');
+        };
+
+        window.doAdminRegister = () => {
+            const email = document.getElementById('adminRegEmail').value;
+            const pass = document.getElementById('adminRegPassword').value;
+            const key = document.getElementById('adminRegKey').value;
+            if (adminRegister(email, pass, key)) { alert('Admin registered! Please login.'); switchAuthTab('login'); }
+            else alert('Registration failed! Check key.');
+        };
+
+        window.closeAuthModal = () => document.getElementById('authModal').classList.remove('active');
+
+        // Dropdown Toggle
+        const userMenuBtn = document.getElementById('userMenuBtn');
+        const userDropdown = document.getElementById('userDropdown');
+        userMenuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            userDropdown.classList.toggle('show');
+        });
+        document.addEventListener('click', (e) => {
+            if (!userMenuBtn.contains(e.target) && !userDropdown.contains(e.target)) {
+                userDropdown.classList.remove('show');
+            }
+        });
+
+        // Dropdown Items
+        document.getElementById('studentLoginItem').onclick = () => openAuthModal('student');
+        document.getElementById('studentRegisterItem').onclick = () => { openAuthModal('student'); switchAuthTab('register'); };
+        document.getElementById('adminLoginItem').onclick = () => openAuthModal('admin');
+        document.getElementById('adminRegisterItem').onclick = () => { openAuthModal('admin'); switchAuthTab('register'); };
+        document.getElementById('logoutItem').onclick = logout;
+
+        // PDF Viewer
+        const pdfModal = document.getElementById('pdfModal');
+        const pdfFrame = document.getElementById('pdfFrame');
+        document.getElementById('studentOpenBtn').onclick = () => {
+            const branch = document.getElementById('studentBranchSelect').value;
+            const sem = document.getElementById('studentSemSelect').value;
+            if (!branch || !sem) { document.getElementById('studentMsg').innerHTML = '❌ Select both'; return; }
+            if (syllabusDB[sem] && syllabusDB[sem][branch]) {
+                pdfFrame.src = syllabusDB[sem][branch];
+                pdfModal.classList.add('active');
+            } else { document.getElementById('studentMsg').innerHTML = '❌ Syllabus not available'; }
+        };
+        window.closePDFModal = () => pdfModal.classList.remove('active');
+
+        // Admin Save/Delete/Reset
+        document.getElementById('savePdfBtn').onclick = () => {
+            const sem = document.getElementById('adminSem').value;
+            const branch = document.getElementById('adminBranch').value;
+            const url = document.getElementById('pdfUrlInput').value.trim();
+            if (!sem || !branch || !url) { showAdminMsg('Fill all fields!', '#ffcdd2'); return; }
+            if (!syllabusDB[sem]) syllabusDB[sem] = {};
+            syllabusDB[sem][branch] = url;
+            localStorage.setItem('beu_syllabus_demo', JSON.stringify(syllabusDB));
             renderAdminTable();
-            showAdminMsg('Deleted successfully!', '#ffcdd2');
-        } else {
-            showAdminMsg('Entry not found!', '#ffcdd2');
-        }
-    }
-    
-    function resetDefault() {
-        if (confirm('Reset all syllabus to default?')) {
-            syllabusDB = JSON.parse(JSON.stringify(DEFAULT_SYLLABUS));
-            saveSyllabus();
-            renderAdminTable();
-            showAdminMsg('Reset to default syllabus!', '#c8e6c9');
-        }
-    }
-    
-    function showAdminMsg(msg, bg) {
-        const div = document.getElementById('adminMsg');
-        div.style.display = 'block';
-        div.style.backgroundColor = bg;
-        div.innerHTML = msg;
-        setTimeout(() => { div.style.display = 'none'; }, 3000);
-    }
-    
-    // Student Viewer
-    const studentBranch = document.getElementById('studentBranchSelect');
-    const studentSem = document.getElementById('studentSemSelect');
-    const studentOpenBtn = document.getElementById('studentOpenBtn');
-    const studentMsg = document.getElementById('studentMsg');
-    const pdfModal = document.getElementById('pdfModal');
-    const pdfFrame = document.getElementById('pdfFrame');
-    
-    studentOpenBtn.onclick = () => {
-        const branch = studentBranch.value;
-        const sem = studentSem.value;
-        if (!branch || !sem) {
-            studentMsg.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Please select both branch & semester.';
-            return;
-        }
-        if (syllabusDB[sem] && syllabusDB[sem][branch]) {
-            pdfFrame.src = syllabusDB[sem][branch];
-            pdfModal.style.display = 'flex';
-            studentMsg.innerHTML = '<i class="fas fa-check-circle"></i> Syllabus opened successfully!';
-        } else {
-            studentMsg.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Syllabus not available for this selection.';
-        }
-    };
-    
-    window.closePDFModal = () => { pdfModal.style.display = 'none'; pdfFrame.src = ''; };
-    window.closePDFModalOnBg = (e) => { if (e.target === pdfModal) closePDFModal(); };
-    
-    // Form Handlers
-    document.getElementById('studentLoginSubmit').onclick = () => {
-        const email = document.getElementById('studentEmail').value;
-        const pass = document.getElementById('studentPassword').value;
-        if (studentLogin(email, pass)) {
-            alert('Login successful!');
-        } else {
-            alert('Invalid credentials!');
-        }
-    };
-    
-    document.getElementById('studentRegisterSubmit').onclick = () => {
-        const name = document.getElementById('studentRegName').value;
-        const email = document.getElementById('studentRegEmail').value;
-        const pass = document.getElementById('studentRegPassword').value;
-        const roll = document.getElementById('studentRoll').value;
-        const branch = document.getElementById('studentRegBranch').value;
-        const sem = document.getElementById('studentRegSem').value;
-        if (studentRegister(name, email, pass, roll, branch, sem)) {
-            alert('Registration successful! Please login.');
-            showStudentLogin();
-        } else {
-            alert('Email already exists!');
-        }
-    };
-    
-    document.getElementById('adminLoginSubmit').onclick = () => {
-        const email = document.getElementById('adminEmail').value;
-        const pass = document.getElementById('adminPassword').value;
-        if (adminLogin(email, pass)) {
-            alert('Admin login successful!');
-        } else {
-            alert('Invalid admin credentials!');
-        }
-    };
-    
-    document.getElementById('adminRegisterSubmit').onclick = () => {
-        const email = document.getElementById('adminRegEmail').value;
-        const pass = document.getElementById('adminRegPassword').value;
-        const key = document.getElementById('adminKey').value;
-        if (adminRegister(email, pass, key)) {
-            alert('Admin registered successfully! Please login.');
-            showAdminLogin();
-        } else {
-            alert('Registration failed! Check key or email exists.');
-        }
-    };
-    
-    document.getElementById('studentLogoutBtn').onclick = logout;
-    document.getElementById('adminLogoutBtn').onclick = logout;
-    document.getElementById('savePdfBtn').onclick = savePdf;
-    document.getElementById('deletePdfBtn').onclick = deletePdf;
-    document.getElementById('resetDefaultBtn').onclick = resetDefault;
-    
-    // Tab Functions
-    window.showStudentLogin = () => {
-        document.getElementById('studentLoginForm').style.display = 'block';
-        document.getElementById('studentRegisterForm').style.display = 'none';
-        document.getElementById('adminLoginForm').style.display = 'none';
-        document.getElementById('adminRegisterForm').style.display = 'none';
-        document.getElementById('studentLoginBtn').classList.add('active');
-        document.getElementById('adminLoginBtn').classList.remove('active');
-    };
-    
-    window.showStudentRegister = () => {
-        document.getElementById('studentLoginForm').style.display = 'none';
-        document.getElementById('studentRegisterForm').style.display = 'block';
-        document.getElementById('adminLoginForm').style.display = 'none';
-        document.getElementById('adminRegisterForm').style.display = 'none';
-        document.getElementById('studentRegisterBtn').classList.add('active');
-        document.getElementById('studentLoginBtn').classList.remove('active');
-        document.getElementById('adminLoginBtn').classList.remove('active');
-    };
-    
-    window.showAdminLogin = () => {
-        document.getElementById('studentLoginForm').style.display = 'none';
-        document.getElementById('studentRegisterForm').style.display = 'none';
-        document.getElementById('adminLoginForm').style.display = 'block';
-        document.getElementById('adminRegisterForm').style.display = 'none';
-        document.getElementById('adminLoginBtn').classList.add('active');
-        document.getElementById('studentLoginBtn').classList.remove('active');
-    };
-    
-    window.showAdminRegister = () => {
-        document.getElementById('studentLoginForm').style.display = 'none';
-        document.getElementById('studentRegisterForm').style.display = 'none';
-        document.getElementById('adminLoginForm').style.display = 'none';
-        document.getElementById('adminRegisterForm').style.display = 'block';
-        document.getElementById('adminRegisterBtn').classList.add('active');
-        document.getElementById('adminLoginBtn').classList.remove('active');
-        document.getElementById('studentLoginBtn').classList.remove('active');
-    };
-    
-    // Add Register buttons to tabs
-    const studentRegisterBtn = document.createElement('button');
-    studentRegisterBtn.className = 'role-btn';
-    studentRegisterBtn.id = 'studentRegisterBtn';
-    studentRegisterBtn.innerHTML = '📝 Student Register';
-    studentRegisterBtn.onclick = showStudentRegister;
-    document.querySelector('.role-tabs').appendChild(studentRegisterBtn);
-    
-    const adminRegisterBtn = document.createElement('button');
-    adminRegisterBtn.className = 'role-btn';
-    adminRegisterBtn.id = 'adminRegisterBtn';
-    adminRegisterBtn.innerHTML = '🔑 Admin Register';
-    adminRegisterBtn.onclick = showAdminRegister;
-    document.querySelector('.role-tabs').appendChild(adminRegisterBtn);
-    
-    // Initialize
-    initData();
-</script>
+            showAdminMsg('Saved!', '#c8e6c9');
+        };
+        document.getElementById('deletePdfBtn').onclick = () => {
+            const sem = document.getElementById('adminSem').value;
+            const branch = document.getElementById('adminBranch').value;
+            if (syllabusDB[sem]?.[branch]) deleteEntry(sem, branch);
+            else showAdminMsg('Entry not found!', '#ffcdd2');
+        };
+        document.getElementById('resetDefaultBtn').onclick = () => {
+            if (confirm('Reset all syllabus?')) {
+                syllabusDB = JSON.parse(JSON.stringify(DEFAULT_SYLLABUS));
+                localStorage.setItem('beu_syllabus_demo', JSON.stringify(syllabusDB));
+                renderAdminTable();
+                showAdminMsg('Reset to default!', '#c8e6c9');
+            }
+        };
+
+        initData();
+        updateUserMenu();
+    </script>
 </body>
 </html>
-```
