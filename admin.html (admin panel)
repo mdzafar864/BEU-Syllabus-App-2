@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Admin Panel</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="box">
+<h2>Upload Syllabus PDF</h2>
+
+<select id="branch">
+<option value="CE">CE</option>
+<option value="CS">CSE</option>
+</select>
+
+<select id="sem">
+<option value="1stNew">1st</option>
+<option value="2ndNew">2nd</option>
+</select>
+
+<input type="file" id="file">
+<button onclick="uploadPDF()">Upload</button>
+
+<p id="msg"></p>
+
+</div>
+
+<script type="module">
+import { db, storage, doc, setDoc, ref, uploadBytes, getDownloadURL } from './firebase.js';
+
+async function uploadPDF(){
+    let file = document.getElementById("file").files[0];
+    let branch = document.getElementById("branch").value;
+    let sem = document.getElementById("sem").value;
+
+    if(!file){
+        alert("Select file");
+        return;
+    }
+
+    let storageRef = ref(storage, `syllabus/${branch}_${sem}.pdf`);
+    await uploadBytes(storageRef, file);
+
+    let url = await getDownloadURL(storageRef);
+
+    await setDoc(doc(db, "syllabus", `${branch}_${sem}`), {
+        url: url
+    });
+
+    document.getElementById("msg").innerHTML = "✅ Upload Success!";
+}
+
+window.uploadPDF = uploadPDF;
+</script>
+
+</body>
+</html>
