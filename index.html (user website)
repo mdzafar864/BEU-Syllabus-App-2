@@ -11,7 +11,8 @@
 <link rel="icon" href="https://raw.githubusercontent.com/mdzafar864/BEU-Syllabus-App/main/favicon.ico">
 
 <!-- CSS -->
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="/BEU-Syllabus-App-2/style.css">
+<script type="module" src="/BEU-Syllabus-App-2/script.js"></script>
 
 </head>
 
