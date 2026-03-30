@@ -1,4 +1,4 @@
-Here is the complete HTML document with a fully functional registration form and proper permissions where Students can view syllabus data and add new syllabus entries, but cannot delete them.
+Here is the complete HTML document with a syllabus submission workflow where student-submitted syllabus goes to admin for approval before becoming visible to all students.
 ```html
 <!DOCTYPE html>
 <html lang="en">
@@ -6,7 +6,7 @@ Here is the complete HTML document with a fully functional registration form and
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#0066ff">
-  <title>BEU Syllabus Manager | Student View/Add | Admin Full Control</title>
+  <title>BEU Syllabus Manager | Student Submit | Admin Approve</title>
   <!-- Google Identity Services SDK for Admin -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
@@ -147,14 +147,14 @@ Here is the complete HTML document with a fully functional registration form and
     .btn-sm { padding: 6px 14px; font-size: 0.8rem; }
     .btn-secondary { background: #64748b; }
 
-    .syllabus-grid, .pending-list, .student-list {
+    .syllabus-grid, .pending-list, .student-list, .submissions-list {
       display: flex;
       flex-direction: column;
       gap: 12px;
       max-height: 500px;
       overflow-y: auto;
     }
-    .syllabus-item, .pending-item, .student-card {
+    .syllabus-item, .pending-item, .student-card, .submission-item {
       background: #f8fafc;
       border-radius: 20px;
       padding: 15px;
@@ -165,7 +165,7 @@ Here is the complete HTML document with a fully functional registration form and
       flex-wrap: wrap;
       gap: 12px;
     }
-    .syllabus-info, .student-info {
+    .syllabus-info, .student-info, .submission-info {
       flex: 1;
     }
     .badge {
@@ -173,6 +173,14 @@ Here is the complete HTML document with a fully functional registration form and
       padding: 4px 12px;
       border-radius: 30px;
       font-size: 0.75rem;
+    }
+    .badge-pending {
+      background: #fef3c7;
+      color: #92400e;
+    }
+    .badge-approved {
+      background: #d1fae5;
+      color: #065f46;
     }
     .action-buttons {
       display: flex;
@@ -232,12 +240,17 @@ Here is the complete HTML document with a fully functional registration form and
     }
     .permission-badge {
       display: inline-block;
-      background: #10b981;
+      background: #f59e0b;
       color: white;
       padding: 2px 10px;
       border-radius: 20px;
       font-size: 0.7rem;
       margin-left: 10px;
+    }
+    .status-badge {
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 20px;
     }
   </style>
 </head>
@@ -247,7 +260,7 @@ Here is the complete HTML document with a fully functional registration form and
   <div class="header">
     <img class="logo-img" src="https://raw.githubusercontent.com/mdzafar864/BEU-Syllabus-App/main/logo.png" alt="BEU" onerror="this.src='https://via.placeholder.com/70?text=BEU'">
     <h1>📚 BEU Syllabus Manager</h1>
-    <p class="sub">Student: View & Add Syllabus (No Delete) | Admin: Full Control + Approve Registrations</p>
+    <p class="sub">Student: Submit Syllabus for Review | Admin: Approve/Reject | Approved Syllabus Visible to All</p>
   </div>
 
   <!-- Role Selection Tabs -->
@@ -272,10 +285,10 @@ Here is the complete HTML document with a fully functional registration form and
     </div>
   </div>
 
-  <!-- ===================== STUDENT PANEL (View & Add Only - No Delete) ===================== -->
+  <!-- ===================== STUDENT PANEL (Submit Syllabus for Admin Approval) ===================== -->
   <div id="studentPanel" class="panel">
     <div class="card">
-      <h2>🎓 Student Portal <span class="permission-badge">View & Add Only</span></h2>
+      <h2>🎓 Student Portal <span class="permission-badge">Submit Syllabus → Admin Approves</span></h2>
       
       <!-- Login Form -->
       <div id="studentLoginForm">
@@ -305,21 +318,21 @@ Here is the complete HTML document with a fully functional registration form and
         <div id="registerMsg" class="msg-area"></div>
       </div>
       
-      <!-- Student Dashboard (View & Add Only) -->
+      <!-- Student Dashboard -->
       <div id="studentDashboard" style="display:none;">
         <div style="background:#d1fae5; border-radius:20px; padding:15px; margin-bottom:20px;">
           <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;">
             <div>
               <strong>👨‍🎓 Student Dashboard</strong>
-              <span style="background:#10b981; color:white; padding:2px 10px; border-radius:20px; font-size:0.7rem; margin-left:10px;">View & Add Only</span>
+              <span style="background:#f59e0b; color:white; padding:2px 10px; border-radius:20px; font-size:0.7rem; margin-left:10px;">Submit for Review</span>
             </div>
             <button id="studentLogoutBtn" class="btn btn-sm btn-danger">Logout</button>
           </div>
           <div id="studentProfile" style="margin-top:10px;"></div>
         </div>
         
-        <!-- View Syllabus Section -->
-        <h3>📄 View Syllabus</h3>
+        <!-- View Approved Syllabus Section -->
+        <h3>📄 Approved Syllabus (Visible to All)</h3>
         <div class="form-group"><label>Branch</label><select id="studentViewBranch"></select></div>
         <div class="form-group"><label>Semester</label><select id="studentViewSem"><option>1st</option><option>2nd</option><option>3rd</option><option>4th</option><option>5th</option><option>6th</option><option>7th</option><option>8th</option></select></div>
         <button class="btn" id="studentViewSyllabusBtn">🔍 View Syllabus</button>
@@ -327,25 +340,32 @@ Here is the complete HTML document with a fully functional registration form and
         
         <hr>
         
-        <!-- Add Syllabus Section (Students can ADD but NOT DELETE) -->
-        <h3>➕ Add New Syllabus <span style="font-size:0.8rem; color:#10b981;">(Students can add)</span></h3>
-        <div class="info-box">📌 Students can contribute by adding new syllabus PDFs. Admin will review and manage deletions.</div>
-        <div class="form-group"><label>Branch *</label><select id="studentAddBranch"><option>CE</option><option>CS</option><option>IOT</option><option>EE</option><option>ECE</option><option>ME</option></select></div>
-        <div class="form-group"><label>Semester *</label><select id="studentAddSem"><option>1st</option><option>2nd</option><option>3rd</option><option>4th</option><option>5th</option><option>6th</option><option>7th</option><option>8th</option></select></div>
-        <div class="form-group"><label>Google Drive PDF Link *</label><input type="url" id="studentAddPdfUrl" placeholder="https://drive.google.com/file/d/.../preview"></div>
-        <button class="btn btn-success" id="studentAddSyllabusBtn">📤 Submit New Syllabus</button>
-        <div id="studentAddMsg" class="msg-area"></div>
+        <!-- Submit New Syllabus for Admin Approval -->
+        <h3>📤 Submit New Syllabus for Admin Review</h3>
+        <div class="info-box">📌 Submit syllabus PDFs. Admin will review and approve. Only approved syllabus becomes visible to all students.</div>
+        <div class="form-group"><label>Branch *</label><select id="studentSubmitBranch"><option>CE</option><option>CS</option><option>IOT</option><option>EE</option><option>ECE</option><option>ME</option></select></div>
+        <div class="form-group"><label>Semester *</label><select id="studentSubmitSem"><option>1st</option><option>2nd</option><option>3rd</option><option>4th</option><option>5th</option><option>6th</option><option>7th</option><option>8th</option></select></div>
+        <div class="form-group"><label>Google Drive PDF Link *</label><input type="url" id="studentSubmitPdfUrl" placeholder="https://drive.google.com/file/d/.../preview"></div>
+        <div class="form-group"><label>Description (Optional)</label><textarea id="submitDescription" rows="2" placeholder="Additional notes about this syllabus"></textarea></div>
+        <button class="btn btn-warning" id="submitSyllabusBtn">📤 Submit for Admin Approval</button>
+        <div id="studentSubmitMsg" class="msg-area"></div>
         
         <hr>
         
-        <!-- All Syllabus List (View Only - No Delete for Students) -->
-        <h4>📚 All Available Syllabus</h4>
+        <!-- View Student's Own Submissions -->
+        <h4>📋 My Syllabus Submissions (Pending/Approved/Rejected)</h4>
+        <div id="studentSubmissionsList" class="submissions-list"></div>
+        
+        <hr>
+        
+        <!-- All Approved Syllabus List -->
+        <h4>📚 All Approved Syllabus</h4>
         <div id="studentSyllabusContainer" class="syllabus-grid"></div>
       </div>
     </div>
   </div>
 
-  <!-- ===================== ADMIN PANEL (Full Control) ===================== -->
+  <!-- ===================== ADMIN PANEL (Approve/Reject Syllabus Submissions) ===================== -->
   <div id="adminPanel" class="panel">
     <div class="card">
       <h2>🛡️ Admin Console <span class="admin-badge">Full Control</span></h2>
@@ -360,31 +380,39 @@ Here is the complete HTML document with a fully functional registration form and
         </div>
         <hr>
         <div style="display:flex; gap:10px; margin:15px 0; flex-wrap:wrap;">
-          <button class="btn btn-sm btn-primary" id="adminSyllabusTabBtn">📘 Manage Syllabus</button>
-          <button class="btn btn-sm btn-warning" id="adminPendingTabBtn">⏳ Pending Approvals</button>
-          <button class="btn btn-sm btn-purple" id="adminStudentsTabBtn">👥 Manage Students</button>
+          <button class="btn btn-sm btn-warning" id="adminPendingSubmissionsTab">⏳ Pending Syllabus Approvals</button>
+          <button class="btn btn-sm btn-primary" id="adminApprovedSyllabusTab">✅ Approved Syllabus</button>
+          <button class="btn btn-sm btn-purple" id="adminPendingStudentsTab">👥 Student Registrations</button>
+          <button class="btn btn-sm btn-secondary" id="adminManageStudentsTab">📋 All Students</button>
         </div>
         
-        <!-- Manage Syllabus (Full CRUD) -->
-        <div id="adminSyllabusSection">
-          <h3>➕ Add New Syllabus</h3>
-          <div class="form-group"><input type="text" id="newBranch" placeholder="Branch (CE/CS/EE/ECE/ME/IOT)"></div>
-          <div class="form-group"><input type="text" id="newSemester" placeholder="Semester (1st, 2nd, 3rd...)"></div>
-          <div class="form-group"><input type="url" id="newPdfUrl" placeholder="Google Drive PDF Link (preview URL)"></div>
-          <button class="btn btn-success" id="addSyllabusBtn">➕ Add Syllabus</button>
-          <h3 style="margin-top:25px;">📚 Existing Syllabus (Delete Available)</h3>
-          <div id="adminSyllabusList" class="syllabus-grid"></div>
+        <!-- Pending Syllabus Submissions (Student submitted, waiting for admin) -->
+        <div id="adminPendingSubmissionsSection">
+          <h3>⏳ Syllabus Submissions Awaiting Approval</h3>
+          <div id="pendingSubmissionsList" class="submissions-list"></div>
+          <div id="adminPendingMsg" class="msg-area"></div>
+        </div>
+        
+        <!-- Approved Syllabus (Admin can delete) -->
+        <div id="adminApprovedSyllabusSection" style="display:none;">
+          <h3>✅ Approved Syllabus (Visible to All Students)</h3>
+          <div class="form-group"><input type="text" id="adminNewBranch" placeholder="Branch (CE/CS/EE/ECE/ME/IOT)"></div>
+          <div class="form-group"><input type="text" id="adminNewSemester" placeholder="Semester (1st, 2nd, 3rd...)"></div>
+          <div class="form-group"><input type="url" id="adminNewPdfUrl" placeholder="Google Drive PDF Link"></div>
+          <button class="btn btn-success" id="adminAddSyllabusBtn">➕ Add Syllabus Directly</button>
+          <h3 style="margin-top:25px;">📚 Existing Approved Syllabus</h3>
+          <div id="adminApprovedSyllabusList" class="syllabus-grid"></div>
           <div id="adminSyllabusMsg" class="msg-area"></div>
         </div>
         
-        <!-- Pending Approvals -->
-        <div id="adminPendingSection" style="display:none;">
+        <!-- Student Registration Approvals -->
+        <div id="adminPendingStudentsSection" style="display:none;">
           <h3>⏳ Student Registration Requests</h3>
           <div id="pendingStudentsList" class="pending-list"></div>
         </div>
         
-        <!-- Manage Students -->
-        <div id="adminStudentsSection" style="display:none;">
+        <!-- All Students Management -->
+        <div id="adminManageStudentsSection" style="display:none;">
           <h3>👥 Registered & Approved Students</h3>
           <div id="allStudentsList" class="student-list"></div>
           <div id="adminStudentMsg" class="msg-area"></div>
@@ -392,7 +420,7 @@ Here is the complete HTML document with a fully functional registration form and
       </div>
     </div>
   </div>
-  <footer>© BEU Syllabus Manager • Student: View & Add Only (No Delete) • Admin: Full CRUD + Approve Registrations</footer>
+  <footer>© BEU Syllabus Manager • Student submits → Admin approves → Visible to all students</footer>
 </div>
 
 <!-- PDF MODAL -->
@@ -408,12 +436,16 @@ Here is the complete HTML document with a fully functional registration form and
 
 <script>
   // ========== DATA STORES ==========
-  let syllabusData = JSON.parse(localStorage.getItem('beu_syllabus')) || [];
+  // Approved Syllabus (visible to all students)
+  let approvedSyllabus = JSON.parse(localStorage.getItem('beu_approved_syllabus')) || [];
+  // Pending Syllabus Submissions (submitted by students, waiting for admin approval)
+  let pendingSubmissions = JSON.parse(localStorage.getItem('beu_pending_submissions')) || [];
   let students = JSON.parse(localStorage.getItem('beu_students')) || [];
   let currentStudent = null;
   let currentAdmin = null;
 
-  function saveSyllabus() { localStorage.setItem('beu_syllabus', JSON.stringify(syllabusData)); }
+  function saveApprovedSyllabus() { localStorage.setItem('beu_approved_syllabus', JSON.stringify(approvedSyllabus)); }
+  function savePendingSubmissions() { localStorage.setItem('beu_pending_submissions', JSON.stringify(pendingSubmissions)); }
   function saveStudents() { localStorage.setItem('beu_students', JSON.stringify(students)); }
 
   function openPdf(url) {
@@ -435,7 +467,7 @@ Here is the complete HTML document with a fully functional registration form and
     document.getElementById('guestTimer').innerText = `${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`;
     if(guestTime <= 0) {
       clearInterval(guestInterval);
-      document.getElementById('guestMsg').innerHTML = "⛔ Guest session expired! Please login as student or admin.";
+      document.getElementById('guestMsg').innerHTML = "⛔ Guest session expired! Please login.";
       document.getElementById('guestBranch').disabled = true;
       document.getElementById('guestSem').disabled = true;
       document.getElementById('guestViewBtn').disabled = true;
@@ -447,13 +479,13 @@ Here is the complete HTML document with a fully functional registration form and
   updateGuestUI();
 
   document.getElementById('guestViewBtn').onclick = () => {
-    if(guestTime <= 0) { showGuestMsg("❌ Session expired. Login required.", "error"); return; }
+    if(guestTime <= 0) { showGuestMsg("❌ Session expired.", "error"); return; }
     let branch = document.getElementById('guestBranch').value;
     let sem = document.getElementById('guestSem').value;
     if(!branch || !sem) { showGuestMsg("⚠️ Select branch & semester", "error"); return; }
-    let found = syllabusData.find(s => s.branch === branch && s.semester === sem);
+    let found = approvedSyllabus.find(s => s.branch === branch && s.semester === sem);
     if(found) { openPdf(found.pdfUrl); showGuestMsg("✅ PDF opened.", "success"); }
-    else showGuestMsg("❌ Syllabus not found.", "error");
+    else showGuestMsg("❌ Syllabus not found or pending approval.", "error");
   };
   function showGuestMsg(msg, type) {
     let div = document.getElementById('guestMsgArea');
@@ -462,7 +494,7 @@ Here is the complete HTML document with a fully functional registration form and
     setTimeout(() => div.className = 'msg-area', 3000);
   }
 
-  // ========== STUDENT LOGIC (View & Add Only - No Delete) ==========
+  // ========== STUDENT LOGIC ==========
   function renderStudentDashboard() {
     if(!currentStudent) return;
     document.getElementById('studentLoginForm').style.display = 'none';
@@ -472,96 +504,117 @@ Here is the complete HTML document with a fully functional registration form and
     let branchSelect = document.getElementById('studentViewBranch');
     branchSelect.innerHTML = '<option>CE</option><option>CS</option><option>IOT</option><option>EE</option><option>ECE</option><option>ME</option>';
     branchSelect.value = currentStudent.branch;
-    displayStudentSyllabusList();
+    displayApprovedSyllabus();
+    displayStudentSubmissions();
   }
   
-  function displayStudentSyllabusList() {
+  function displayApprovedSyllabus() {
     const container = document.getElementById('studentSyllabusContainer');
     if(!container) return;
-    if(syllabusData.length === 0) { container.innerHTML = '<p>No syllabus uploaded yet. Be the first to add!</p>'; return; }
-    // STUDENTS: View Only - No Delete Button!
-    container.innerHTML = syllabusData.map((item, idx) => `
+    if(approvedSyllabus.length === 0) { container.innerHTML = '<p>No approved syllabus yet. Submit for review!</p>'; return; }
+    container.innerHTML = approvedSyllabus.map((item) => `
       <div class="syllabus-item">
-        <div class="syllabus-info"><strong>${item.branch} - ${item.semester}</strong><br><span style="font-size:0.7rem; color:#64748b;">${item.pdfUrl.substring(0,60)}...</span></div>
-        <div class="action-buttons">
-          <button class="btn btn-sm btn-primary view-syllabus-student" data-url="${item.pdfUrl}">View</button>
-          <span style="font-size:0.7rem; color:#94a3b8;">(Read only)</span>
+        <div class="syllabus-info"><strong>${item.branch} - ${item.semester}</strong><br><span style="font-size:0.7rem;">${item.pdfUrl.substring(0,60)}</span><br><small>Approved by Admin</small></div>
+        <div class="action-buttons"><button class="btn btn-sm btn-primary view-approved" data-url="${item.pdfUrl}">View</button></div>
+      </div>
+    `).join('');
+    document.querySelectorAll('.view-approved').forEach(btn => {
+      btn.addEventListener('click', (e) => { openPdf(btn.dataset.url); });
+    });
+  }
+  
+  function displayStudentSubmissions() {
+    const container = document.getElementById('studentSubmissionsList');
+    if(!container) return;
+    let mySubmissions = pendingSubmissions.filter(s => s.submittedBy === currentStudent.email);
+    if(mySubmissions.length === 0) { container.innerHTML = '<p>No submissions yet. Submit a syllabus for admin review!</p>'; return; }
+    container.innerHTML = mySubmissions.map((item) => `
+      <div class="submission-item">
+        <div class="submission-info">
+          <strong>${item.branch} - ${item.semester}</strong><br>
+          <small>${item.pdfUrl.substring(0,50)}...</small><br>
+          <span class="status-badge ${item.status === 'pending' ? 'badge-pending' : (item.status === 'approved' ? 'badge-approved' : 'msg-error')}">
+            ${item.status === 'pending' ? '⏳ Pending Approval' : (item.status === 'approved' ? '✅ Approved' : '❌ Rejected')}
+          </span>
+          ${item.reviewNote ? `<br><small>Note: ${item.reviewNote}</small>` : ''}
         </div>
       </div>
     `).join('');
-    document.querySelectorAll('.view-syllabus-student').forEach(btn => {
-      btn.addEventListener('click', (e) => { openPdf(btn.dataset.url); });
-    });
   }
   
   // Student View Syllabus
   document.getElementById('studentViewSyllabusBtn').onclick = () => {
     let branch = document.getElementById('studentViewBranch').value;
     let sem = document.getElementById('studentViewSem').value;
-    let found = syllabusData.find(s => s.branch === branch && s.semester === sem);
+    let found = approvedSyllabus.find(s => s.branch === branch && s.semester === sem);
     if(found) openPdf(found.pdfUrl);
-    else document.getElementById('studentViewMsg').innerHTML = "<span style='color:red'>❌ Syllabus not available.</span>";
+    else document.getElementById('studentViewMsg').innerHTML = "<span style='color:red'>❌ Syllabus not available or pending approval.</span>";
   };
   
-  // STUDENT ADD SYLLABUS (Can Add, Cannot Delete)
-  document.getElementById('studentAddSyllabusBtn').onclick = () => {
-    let branch = document.getElementById('studentAddBranch').value;
-    let sem = document.getElementById('studentAddSem').value;
-    let pdfUrl = document.getElementById('studentAddPdfUrl').value.trim();
+  // Student Submit Syllabus for Admin Approval
+  document.getElementById('submitSyllabusBtn').onclick = () => {
+    let branch = document.getElementById('studentSubmitBranch').value;
+    let sem = document.getElementById('studentSubmitSem').value;
+    let pdfUrl = document.getElementById('studentSubmitPdfUrl').value.trim();
+    let description = document.getElementById('submitDescription').value;
     
     if(!branch || !sem || !pdfUrl) {
-      showStudentAddMsg("❌ Please fill all fields", "error");
+      showSubmitMsg("❌ Please fill all required fields", "error");
       return;
     }
     
-    // Check if already exists
-    if(syllabusData.some(s => s.branch === branch && s.semester === sem)) {
-      showStudentAddMsg("⚠️ Syllabus for this branch & semester already exists! You can view it above.", "error");
+    // Check if already approved
+    if(approvedSyllabus.some(s => s.branch === branch && s.semester === sem)) {
+      showSubmitMsg("⚠️ Syllabus already exists and is approved! You can view it above.", "error");
       return;
     }
     
-    syllabusData.push({ branch, semester: sem, pdfUrl, id: Date.now(), addedBy: currentStudent.email });
-    saveSyllabus();
-    displayStudentSyllabusList();
-    showStudentAddMsg("✅ Syllabus added successfully! It's now available for all students.", "success");
-    document.getElementById('studentAddPdfUrl').value = '';
+    // Check if already pending
+    if(pendingSubmissions.some(s => s.branch === branch && s.semester === sem && s.status === 'pending')) {
+      showSubmitMsg("⚠️ You already have a pending submission for this branch & semester.", "error");
+      return;
+    }
+    
+    let newSubmission = {
+      id: Date.now(),
+      branch,
+      semester: sem,
+      pdfUrl,
+      description,
+      submittedBy: currentStudent.email,
+      submittedByName: currentStudent.fullName,
+      submittedAt: new Date().toISOString(),
+      status: 'pending',
+      reviewNote: ''
+    };
+    pendingSubmissions.push(newSubmission);
+    savePendingSubmissions();
+    showSubmitMsg("✅ Syllabus submitted successfully! Awaiting admin approval.", "success");
+    document.getElementById('studentSubmitPdfUrl').value = '';
+    document.getElementById('submitDescription').value = '';
+    displayStudentSubmissions();
   };
   
-  function showStudentAddMsg(msg, type) {
-    let div = document.getElementById('studentAddMsg');
+  function showSubmitMsg(msg, type) {
+    let div = document.getElementById('studentSubmitMsg');
     div.innerHTML = msg;
     div.className = `msg-area ${type === 'success' ? 'msg-success' : 'msg-error'}`;
     setTimeout(() => div.className = 'msg-area', 4000);
   }
   
-  // Student Login
+  // Student Login/Registration (same as before)
   document.getElementById('studentLoginBtn').onclick = () => {
     let id = document.getElementById('studentLoginId').value.trim();
     let pwd = document.getElementById('studentLoginPass').value;
     let stud = students.find(s => (s.email === id || s.regNo === id) && s.password === pwd && s.approved === true);
-    if(stud) { 
-      currentStudent = stud; 
-      renderStudentDashboard(); 
-      document.getElementById('studentLoginMsg').innerHTML = "<span style='color:green'>✅ Login successful!</span>";
-    } else {
-      document.getElementById('studentLoginMsg').innerHTML = "<span style='color:red'>❌ Invalid credentials or account not approved by admin.</span>";
-    }
+    if(stud) { currentStudent = stud; renderStudentDashboard(); document.getElementById('studentLoginMsg').innerHTML = "<span style='color:green'>✅ Login successful!</span>"; }
+    else document.getElementById('studentLoginMsg').innerHTML = "<span style='color:red'>❌ Invalid credentials or account not approved.</span>";
   };
   
   document.getElementById('studentLogoutBtn').onclick = () => { currentStudent = null; location.reload(); };
+  document.getElementById('showRegisterLink').onclick = (e) => { e.preventDefault(); document.getElementById('studentLoginForm').style.display = 'none'; document.getElementById('studentRegisterForm').style.display = 'block'; };
+  document.getElementById('backToLoginBtn').onclick = () => { document.getElementById('studentLoginForm').style.display = 'block'; document.getElementById('studentRegisterForm').style.display = 'none'; };
   
-  document.getElementById('showRegisterLink').onclick = (e) => { 
-    e.preventDefault(); 
-    document.getElementById('studentLoginForm').style.display = 'none'; 
-    document.getElementById('studentRegisterForm').style.display = 'block'; 
-  };
-  document.getElementById('backToLoginBtn').onclick = () => { 
-    document.getElementById('studentLoginForm').style.display = 'block'; 
-    document.getElementById('studentRegisterForm').style.display = 'none'; 
-    document.getElementById('registerMsg').innerHTML = '';
-  };
-  
-  // Registration Submit
   document.getElementById('registerRequestBtn').onclick = () => {
     let fullName = document.getElementById('regFullName').value.trim();
     let email = document.getElementById('regEmail').value.trim();
@@ -570,149 +623,162 @@ Here is the complete HTML document with a fully functional registration form and
     let branch = document.getElementById('regBranch').value;
     let sem = document.getElementById('regSem').value;
     let telegram = document.getElementById('regTelegram').value.trim();
-    
-    if(!fullName || !email || !pwd || !regNo || !branch || !sem) {
-      showRegisterMsg("❌ All required fields must be filled", "error");
-      return;
-    }
-    if(pwd.length < 4) { showRegisterMsg("❌ Password must be at least 4 characters", "error"); return; }
-    if(students.some(s => s.email === email)) { showRegisterMsg("❌ Email already registered!", "error"); return; }
-    if(students.some(s => s.regNo === regNo)) { showRegisterMsg("❌ Registration number already exists!", "error"); return; }
-    
-    let newStudent = { id: Date.now(), fullName, email, password: pwd, regNo, branch, semester: sem, telegram, approved: false };
-    students.push(newStudent);
+    if(!fullName || !email || !pwd || !regNo || !branch || !sem) { showRegMsg("❌ All fields required", "error"); return; }
+    if(pwd.length < 4) { showRegMsg("❌ Password min 4 chars", "error"); return; }
+    if(students.some(s => s.email === email)) { showRegMsg("❌ Email exists", "error"); return; }
+    if(students.some(s => s.regNo === regNo)) { showRegMsg("❌ RegNo exists", "error"); return; }
+    students.push({ id: Date.now(), fullName, email, password: pwd, regNo, branch, semester: sem, telegram, approved: false });
     saveStudents();
-    showRegisterMsg("✅ Registration submitted! Wait for admin approval.", "success");
-    
-    document.getElementById('regFullName').value = '';
-    document.getElementById('regEmail').value = '';
-    document.getElementById('regPassword').value = '';
-    document.getElementById('regRegNo').value = '';
-    document.getElementById('regBranch').value = '';
-    document.getElementById('regSem').value = '';
-    document.getElementById('regTelegram').value = '';
-    
-    setTimeout(() => { document.getElementById('backToLoginBtn').click(); }, 2000);
+    showRegMsg("✅ Registration submitted! Wait for admin approval.", "success");
+    setTimeout(() => document.getElementById('backToLoginBtn').click(), 2000);
   };
-  
-  function showRegisterMsg(msg, type) {
-    let msgDiv = document.getElementById('registerMsg');
-    msgDiv.innerHTML = msg;
-    msgDiv.className = `msg-area ${type === 'success' ? 'msg-success' : 'msg-error'}`;
-    setTimeout(() => msgDiv.className = 'msg-area', 4000);
-  }
+  function showRegMsg(msg, type) { let div = document.getElementById('registerMsg'); div.innerHTML = msg; div.className = `msg-area ${type === 'success' ? 'msg-success' : 'msg-error'}`; setTimeout(() => div.className = 'msg-area', 4000); }
 
-  // ========== ADMIN PANEL (Full Control with Delete) ==========
+  // ========== ADMIN PANEL ==========
   function initAdminGoogle() {
     const container = document.getElementById("googleButtonContainer");
-    container.innerHTML = '<button id="simulateAdminBtn" class="btn btn-purple">🔐 Simulate Admin Login (Demo)</button>';
+    container.innerHTML = '<button id="simulateAdminBtn" class="btn btn-purple">🔐 Simulate Admin Login</button>';
     document.getElementById("simulateAdminBtn").onclick = () => {
-      currentAdmin = { name: "Demo Admin", email: "admin@beu.edu" };
+      currentAdmin = { name: "Admin User", email: "admin@beu.edu" };
       document.getElementById('adminNotLogged').style.display = 'none';
       document.getElementById('adminLoggedArea').style.display = 'block';
-      document.getElementById('adminName').innerText = currentAdmin.name + " (Demo Mode)";
-      renderAdminSyllabusList();
-      renderPendingApprovals();
+      document.getElementById('adminName').innerText = currentAdmin.name;
+      renderPendingSubmissions();
+      renderApprovedSyllabusList();
+      renderPendingStudentApprovals();
       renderAllStudentsList();
     };
   }
   
-  function renderAdminSyllabusList() {
-    const container = document.getElementById('adminSyllabusList');
-    if(!container) return;
-    if(syllabusData.length === 0) { container.innerHTML = "<p>No syllabus added.</p>"; return; }
-    // ADMIN: Has Delete Button
-    container.innerHTML = syllabusData.map((item, idx) => `
-      <div class="syllabus-item">
-        <div><strong>${item.branch} - ${item.semester}</strong><br><small>${item.pdfUrl.substring(0,60)}</small><br><span style="font-size:0.7rem;">Added by: ${item.addedBy || 'Admin'}</span></div>
+  function renderPendingSubmissions() {
+    const pending = pendingSubmissions.filter(s => s.status === 'pending');
+    const container = document.getElementById('pendingSubmissionsList');
+    if(pending.length === 0) { container.innerHTML = "<p>✅ No pending syllabus submissions.</p>"; return; }
+    container.innerHTML = pending.map(sub => `
+      <div class="submission-item">
+        <div class="submission-info">
+          <strong>${sub.branch} - ${sub.semester}</strong><br>
+          <small>PDF: ${sub.pdfUrl.substring(0,50)}...</small><br>
+          <small>Submitted by: ${sub.submittedByName} (${sub.submittedBy})</small><br>
+          ${sub.description ? `<small>Note: ${sub.description}</small>` : ''}
+        </div>
         <div class="action-buttons">
-          <button class="btn btn-sm btn-danger delete-syllabus" data-idx="${idx}">🗑️ Delete</button>
+          <button class="btn btn-sm btn-success approve-submission" data-id="${sub.id}">✅ Approve</button>
+          <button class="btn btn-sm btn-danger reject-submission" data-id="${sub.id}">❌ Reject</button>
         </div>
       </div>
     `).join('');
-    document.querySelectorAll('.delete-syllabus').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        let idx = parseInt(btn.dataset.idx);
-        if(confirm("Delete this syllabus permanently?")) { 
-          syllabusData.splice(idx,1); 
-          saveSyllabus(); 
-          renderAdminSyllabusList(); 
-          displayStudentSyllabusList();
+    document.querySelectorAll('.approve-submission').forEach(btn => {
+      btn.addEventListener('click', () => {
+        let id = parseInt(btn.dataset.id);
+        let submission = pendingSubmissions.find(s => s.id === id);
+        if(submission) {
+          submission.status = 'approved';
+          // Add to approved syllabus
+          approvedSyllabus.push({
+            branch: submission.branch,
+            semester: submission.semester,
+            pdfUrl: submission.pdfUrl,
+            approvedBy: currentAdmin.email,
+            approvedAt: new Date().toISOString()
+          });
+          saveApprovedSyllabus();
+          savePendingSubmissions();
+          renderPendingSubmissions();
+          renderApprovedSyllabusList();
+          displayApprovedSyllabus();
+          document.getElementById('adminPendingMsg').innerHTML = "<span style='color:green'>✅ Syllabus approved and now visible to all students!</span>";
+        }
+      });
+    });
+    document.querySelectorAll('.reject-submission').forEach(btn => {
+      btn.addEventListener('click', () => {
+        let id = parseInt(btn.dataset.id);
+        let submission = pendingSubmissions.find(s => s.id === id);
+        if(submission && confirm("Reject this syllabus submission?")) {
+          submission.status = 'rejected';
+          submission.reviewNote = "Rejected by admin";
+          savePendingSubmissions();
+          renderPendingSubmissions();
+          displayStudentSubmissions();
+          document.getElementById('adminPendingMsg').innerHTML = "<span style='color:orange'>❌ Syllabus rejected.</span>";
         }
       });
     });
   }
   
-  document.getElementById('addSyllabusBtn').onclick = () => {
-    let branch = document.getElementById('newBranch').value.trim();
-    let sem = document.getElementById('newSemester').value.trim();
-    let url = document.getElementById('newPdfUrl').value.trim();
+  function renderApprovedSyllabusList() {
+    const container = document.getElementById('adminApprovedSyllabusList');
+    if(!container) return;
+    if(approvedSyllabus.length === 0) { container.innerHTML = "<p>No approved syllabus.</p>"; return; }
+    container.innerHTML = approvedSyllabus.map((item, idx) => `
+      <div class="syllabus-item">
+        <div><strong>${item.branch} - ${item.semester}</strong><br><small>${item.pdfUrl.substring(0,60)}</small></div>
+        <div class="action-buttons">
+          <button class="btn btn-sm btn-danger delete-approved" data-idx="${idx}">🗑️ Delete</button>
+        </div>
+      </div>
+    `).join('');
+    document.querySelectorAll('.delete-approved').forEach(btn => {
+      btn.addEventListener('click', () => {
+        let idx = parseInt(btn.dataset.idx);
+        if(confirm("Delete this syllabus permanently?")) { 
+          approvedSyllabus.splice(idx,1); 
+          saveApprovedSyllabus(); 
+          renderApprovedSyllabusList(); 
+          displayApprovedSyllabus();
+        }
+      });
+    });
+  }
+  
+  document.getElementById('adminAddSyllabusBtn').onclick = () => {
+    let branch = document.getElementById('adminNewBranch').value.trim();
+    let sem = document.getElementById('adminNewSemester').value.trim();
+    let url = document.getElementById('adminNewPdfUrl').value.trim();
     if(!branch || !sem || !url) { document.getElementById('adminSyllabusMsg').innerHTML = "<span style='color:red'>All fields required</span>"; return; }
-    syllabusData.push({ branch, semester: sem, pdfUrl: url, id: Date.now(), addedBy: 'Admin' });
-    saveSyllabus();
-    renderAdminSyllabusList();
-    displayStudentSyllabusList();
-    document.getElementById('adminSyllabusMsg').innerHTML = "<span style='color:green'>✅ Syllabus added!</span>";
-    document.getElementById('newBranch').value = ''; document.getElementById('newSemester').value = ''; document.getElementById('newPdfUrl').value = '';
-    setTimeout(() => document.getElementById('adminSyllabusMsg').innerHTML = '', 3000);
+    approvedSyllabus.push({ branch, semester: sem, pdfUrl: url, approvedBy: currentAdmin.email, approvedAt: new Date().toISOString() });
+    saveApprovedSyllabus();
+    renderApprovedSyllabusList();
+    displayApprovedSyllabus();
+    document.getElementById('adminSyllabusMsg').innerHTML = "<span style='color:green'>✅ Syllabus added directly!</span>";
+    document.getElementById('adminNewBranch').value = ''; document.getElementById('adminNewSemester').value = ''; document.getElementById('adminNewPdfUrl').value = '';
   };
   
-  function renderPendingApprovals() {
+  function renderPendingStudentApprovals() {
     const pending = students.filter(s => !s.approved);
     const container = document.getElementById('pendingStudentsList');
     if(pending.length === 0) { container.innerHTML = "<p>✅ No pending registrations.</p>"; return; }
     container.innerHTML = pending.map(s => `
-      <div class="pending-item">
-        <div><strong>${s.fullName}</strong> (${s.email})<br>Reg: ${s.regNo} | ${s.branch} - ${s.semester}</div>
-        <div class="action-buttons">
-          <button class="btn btn-sm btn-success approve-student" data-id="${s.id}">✅ Approve</button>
-          <button class="btn btn-sm btn-danger reject-student" data-id="${s.id}">❌ Reject</button>
-        </div>
-      </div>
+      <div class="pending-item"><div><strong>${s.fullName}</strong> (${s.email})<br>Reg: ${s.regNo} | ${s.branch} - ${s.semester}</div>
+      <div class="action-buttons"><button class="btn btn-sm btn-success approve-student" data-id="${s.id}">✅ Approve</button><button class="btn btn-sm btn-danger reject-student" data-id="${s.id}">❌ Reject</button></div></div>
     `).join('');
-    document.querySelectorAll('.approve-student').forEach(btn => {
-      btn.addEventListener('click', () => {
-        let id = parseInt(btn.dataset.id);
-        let student = students.find(s => s.id === id);
-        if(student) { student.approved = true; saveStudents(); renderPendingApprovals(); renderAllStudentsList(); }
-      });
-    });
-    document.querySelectorAll('.reject-student').forEach(btn => {
-      btn.addEventListener('click', () => {
-        let id = parseInt(btn.dataset.id);
-        students = students.filter(s => s.id !== id);
-        saveStudents();
-        renderPendingApprovals();
-        renderAllStudentsList();
-      });
-    });
+    document.querySelectorAll('.approve-student').forEach(btn => { btn.addEventListener('click', () => { let id = parseInt(btn.dataset.id); let s = students.find(s => s.id === id); if(s) { s.approved = true; saveStudents(); renderPendingStudentApprovals(); renderAllStudentsList(); } }); });
+    document.querySelectorAll('.reject-student').forEach(btn => { btn.addEventListener('click', () => { let id = parseInt(btn.dataset.id); students = students.filter(s => s.id !== id); saveStudents(); renderPendingStudentApprovals(); renderAllStudentsList(); }); });
   }
   
   function renderAllStudentsList() {
     const approved = students.filter(s => s.approved === true);
     const container = document.getElementById('allStudentsList');
     if(approved.length === 0) { container.innerHTML = "<p>No approved students.</p>"; return; }
-    container.innerHTML = approved.map(s => `
-      <div class="student-card">
-        <div class="student-info"><strong>${s.fullName}</strong><br>${s.email} | ${s.regNo} | ${s.branch} - ${s.semester}</div>
-        <div class="action-buttons"><button class="btn btn-sm btn-danger delete-student-admin" data-id="${s.id}">Delete Student</button></div>
-      </div>
-    `).join('');
-    document.querySelectorAll('.delete-student-admin').forEach(btn => {
-      btn.addEventListener('click', () => {
-        let id = parseInt(btn.dataset.id);
-        if(confirm("Delete this student account?")) { students = students.filter(s => s.id !== id); saveStudents(); renderAllStudentsList(); renderPendingApprovals(); }
-      });
-    });
+    container.innerHTML = approved.map(s => `<div class="student-card"><div><strong>${s.fullName}</strong><br>${s.email} | ${s.regNo} | ${s.branch} - ${s.semester}</div><div class="action-buttons"><button class="btn btn-sm btn-danger delete-student" data-id="${s.id}">Delete</button></div></div>`).join('');
+    document.querySelectorAll('.delete-student').forEach(btn => { btn.addEventListener('click', () => { let id = parseInt(btn.dataset.id); if(confirm("Delete student?")) { students = students.filter(s => s.id !== id); saveStudents(); renderAllStudentsList(); renderPendingStudentApprovals(); } }); });
   }
   
-  document.getElementById('adminSyllabusTabBtn').onclick = () => { document.getElementById('adminSyllabusSection').style.display = 'block'; document.getElementById('adminPendingSection').style.display = 'none'; document.getElementById('adminStudentsSection').style.display = 'none'; renderAdminSyllabusList(); };
-  document.getElementById('adminPendingTabBtn').onclick = () => { document.getElementById('adminSyllabusSection').style.display = 'none'; document.getElementById('adminPendingSection').style.display = 'block'; document.getElementById('adminStudentsSection').style.display = 'none'; renderPendingApprovals(); };
-  document.getElementById('adminStudentsTabBtn').onclick = () => { document.getElementById('adminSyllabusSection').style.display = 'none'; document.getElementById('adminPendingSection').style.display = 'none'; document.getElementById('adminStudentsSection').style.display = 'block'; renderAllStudentsList(); };
+  document.getElementById('adminPendingSubmissionsTab').onclick = () => { showAdminSection('pendingSubmissions'); renderPendingSubmissions(); };
+  document.getElementById('adminApprovedSyllabusTab').onclick = () => { showAdminSection('approvedSyllabus'); renderApprovedSyllabusList(); };
+  document.getElementById('adminPendingStudentsTab').onclick = () => { showAdminSection('pendingStudents'); renderPendingStudentApprovals(); };
+  document.getElementById('adminManageStudentsTab').onclick = () => { showAdminSection('manageStudents'); renderAllStudentsList(); };
+  function showAdminSection(section) {
+    document.getElementById('adminPendingSubmissionsSection').style.display = section === 'pendingSubmissions' ? 'block' : 'none';
+    document.getElementById('adminApprovedSyllabusSection').style.display = section === 'approvedSyllabus' ? 'block' : 'none';
+    document.getElementById('adminPendingStudentsSection').style.display = section === 'pendingStudents' ? 'block' : 'none';
+    document.getElementById('adminManageStudentsSection').style.display = section === 'manageStudents' ? 'block' : 'none';
+  }
   document.getElementById('adminLogoutBtn').onclick = () => { currentAdmin = null; location.reload(); };
   initAdminGoogle();
+  showAdminSection('pendingSubmissions');
 
-  // ========== ROLE SWITCHING ==========
   window.switchRole = (role) => {
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active-panel'));
     document.getElementById(`${role}Panel`).classList.add('active-panel');
@@ -720,17 +786,15 @@ Here is the complete HTML document with a fully functional registration form and
     if(role === 'guest') document.querySelector('.role-btn.guest').classList.add('active');
     if(role === 'student') document.querySelector('.role-btn.student').classList.add('active');
     if(role === 'admin') document.querySelector('.role-btn.admin').classList.add('active');
-    if(role === 'student' && currentStudent) renderStudentDashboard();
   };
   
-  // Initial data seeding
-  if(syllabusData.length === 0) {
-    syllabusData.push({ branch:"CS", semester:"3rd", pdfUrl:"https://drive.google.com/file/d/1Zp-UAEgj72UstczPS_wSIBtlPU48USal/preview", id:1, addedBy:"System" });
-    syllabusData.push({ branch:"CE", semester:"4th", pdfUrl:"https://drive.google.com/file/d/17w5zTFNaWUOg7S_vUrqW_AxtMyf7bPdU/preview", id:2, addedBy:"System" });
-    saveSyllabus();
+  if(approvedSyllabus.length === 0) {
+    approvedSyllabus.push({ branch:"CS", semester:"3rd", pdfUrl:"https://drive.google.com/file/d/1Zp-UAEgj72UstczPS_wSIBtlPU48USal/preview", approvedBy:"System" });
+    approvedSyllabus.push({ branch:"CE", semester:"4th", pdfUrl:"https://drive.google.com/file/d/17w5zTFNaWUOg7S_vUrqW_AxtMyf7bPdU/preview", approvedBy:"System" });
+    saveApprovedSyllabus();
   }
   if(students.length === 0) {
-    students.push({ id:1, fullName:"Demo Student", email:"student@beu.edu", password:"1234", regNo:"2024CS001", branch:"CS", semester:"3rd", telegram:"@demo", approved:true });
+    students.push({ id:1, fullName:"Demo Student", email:"student@beu.edu", password:"1234", regNo:"2024CS001", branch:"CS", semester:"3rd", approved:true });
     saveStudents();
   }
 </script>
