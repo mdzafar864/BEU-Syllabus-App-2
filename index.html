@@ -1,25 +1,21 @@
-Here is the HTML document with the menu toggle removed, providing a clean interface with Firebase authentication and a persistent admin sidebar.
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="description" content="BEU Syllabus Manager with Firebase Auth, Admin Dashboard, and PDF Database Management">
-    <title>BEU Syllabus | Admin Dashboard + Firebase Auth</title>
-    <!-- Font Awesome 6 (free) -->
+    <meta name="description" content="BEU Syllabus Manager with Student & Admin Login, Firebase Auth, and PDF Database Management">
+    <title>BEU Syllabus | Student & Admin Login System</title>
+    <!-- Font Awesome 6 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <!-- Firebase SDKs -->
     <script type="module">
-        // Import Firebase modules (version 9+ modular)
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, collection, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, getDocs, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // Firebase configuration (REPLACE WITH YOUR ACTUAL FIREBASE PROJECT CONFIG)
-        // For production, replace these values with your own Firebase project settings
+        // Firebase Configuration (REPLACE WITH YOUR ACTUAL FIREBASE PROJECT CONFIG)
         const firebaseConfig = {
-            apiKey: "AIzaSyBfkI1xrUfH1o1XcFv1P7QzXvYxZ1aBcDe",  // Replace with your actual API key
+            apiKey: "AIzaSyBfkI1xrUfH1o1XcFv1P7QzXvYxZ1aBcDe",
             authDomain: "beu-syllabus-manager.firebaseapp.com",
             projectId: "beu-syllabus-manager",
             storageBucket: "beu-syllabus-manager.appspot.com",
@@ -27,26 +23,32 @@ Here is the HTML document with the menu toggle removed, providing a clean interf
             appId: "1:123456789012:web:abcdef1234567890"
         };
 
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const provider = new GoogleAuthProvider();
         const db = getFirestore(app);
 
         // DOM Elements
-        const loginBtn = document.getElementById('googleLoginBtn');
-        const logoutBtn = document.getElementById('logoutBtn');
-        const authStatusDiv = document.getElementById('authStatus');
-        const adminSidebar = document.getElementById('adminSidebar');
-        const adminPanelContent = document.getElementById('adminPanelContent');
+        const studentLoginForm = document.getElementById('studentLoginForm');
+        const adminLoginForm = document.getElementById('adminLoginForm');
+        const studentRegisterForm = document.getElementById('studentRegisterForm');
+        const adminRegisterForm = document.getElementById('adminRegisterForm');
+        const studentDashboard = document.getElementById('studentDashboard');
+        const adminDashboard = document.getElementById('adminDashboard');
+        const loginSelection = document.getElementById('loginSelection');
         const userAvatar = document.getElementById('userAvatar');
         const userNameSpan = document.getElementById('userName');
         const userEmailSpan = document.getElementById('userEmail');
+        const userRoleSpan = document.getElementById('userRole');
+        const authStatusDiv = document.getElementById('authStatus');
         
-        // Syllabus DB reference in Firestore
+        // Syllabus Collection
         const SYLLABUS_COLLECTION = "syllabusDB";
-        
-        // Default syllabus structure (used for reset)
+        let currentSyllabus = {};
+        let currentUserRole = null;
+        let currentUserData = null;
+
+        // Default Syllabus Data
         const DEFAULT_SYLLABUS = {
             "1stNew": { "CE": "https://drive.google.com/file/d/1Qd3X732fBWyEax1GTudkBWn7fpe57CgA/preview", "CS": "https://drive.google.com/file/d/1Zp-UAEgj72UstczPS_wSIBtlPU48USal/preview", "EE": "https://drive.google.com/file/d/1dZCtmM7w3H9dRpsWMlDhhJZNvFOiA1up/preview", "ECE": "https://drive.google.com/file/d/14cLD5aiYQp_2U3qKN16pa7U4fowBMg3J/preview", "ME": "https://drive.google.com/file/d/1yYB-UOYnpkOCYspJeZv83o7Rjy3wfcB8/preview" },
             "1stOld": { "CE": "https://drive.google.com/file/d/1iRWghHRyCP6WPZ3Xoc0DdScIytir3xRn/preview", "CS": "https://drive.google.com/file/d/1EHpLPUo0_7086gFmk2WRZv2fMw93Jcdb/preview", "EE": "https://drive.google.com/file/d/1BtS61CEIOidszDe5FLBVQUake_8RQZlK/preview", "ECE": "https://drive.google.com/file/d/1t57gqcXtYajz6p5q6FXtcBVPb-mUgX1m/preview", "ME": "https://drive.google.com/file/d/1gyWaJKhhcZNmSF9WlWfqRXfnTeA87hvY/preview" },
@@ -61,90 +63,40 @@ Here is the HTML document with the menu toggle removed, providing a clean interf
             "8th": { "EE": "https://drive.google.com/file/d/1BwL_f3KCmWzuEulEth3G3hQw5sxLvBOy/preview", "ME": "https://drive.google.com/file/d/1PPkfTohITDMkIFNuw836gSOSUjCFtt3n/preview" }
         };
 
-        // Current syllabus in memory
-        let currentSyllabus = {};
-
         // Load syllabus from Firestore
-        async function loadSyllabusFromFirestore() {
+        async function loadSyllabus() {
             try {
                 const querySnapshot = await getDocs(collection(db, SYLLABUS_COLLECTION));
                 const newSyllabus = {};
-                querySnapshot.forEach(docSnap => {
-                    newSyllabus[docSnap.id] = docSnap.data();
-                });
+                querySnapshot.forEach(docSnap => { newSyllabus[docSnap.id] = docSnap.data(); });
                 currentSyllabus = newSyllabus;
-                renderAdminTable();
+                renderStudentViewer();
+                if (currentUserRole === 'admin') renderAdminTable();
                 return true;
             } catch (err) {
                 console.error("Error loading syllabus:", err);
-                showAdminMsg("⚠️ Failed to load syllabus from Firestore.", "#ffcdd2");
                 return false;
             }
         }
 
-        // Reset to default syllabus
-        async function resetToDefaultFirestore() {
-            if (!confirm("⚠️ WARNING: This will erase ALL custom PDF links and restore default syllabus. Continue?")) return;
-            try {
-                const snapshot = await getDocs(collection(db, SYLLABUS_COLLECTION));
-                for (const docSnap of snapshot.docs) {
-                    await deleteDoc(doc(db, SYLLABUS_COLLECTION, docSnap.id));
-                }
+        // Initialize default syllabus if empty
+        async function initDefaultSyllabus() {
+            const snapshot = await getDocs(collection(db, SYLLABUS_COLLECTION));
+            if (snapshot.empty) {
                 for (const [sem, branches] of Object.entries(DEFAULT_SYLLABUS)) {
                     await setDoc(doc(db, SYLLABUS_COLLECTION, sem), branches);
                 }
-                await loadSyllabusFromFirestore();
-                showAdminMsg("✅ Database reset to default syllabus!", "#c8e6c9");
-            } catch (err) {
-                showAdminMsg("❌ Reset failed: " + err.message, "#ffcdd2");
+                await loadSyllabus();
             }
         }
 
-        // Save or update PDF entry
-        async function saveOrUpdatePdfEntry(sem, branch, url) {
-            if (!sem || !branch || !url) return false;
-            try {
-                let semData = currentSyllabus[sem] || {};
-                semData[branch] = url;
-                await setDoc(doc(db, SYLLABUS_COLLECTION, sem), semData);
-                await loadSyllabusFromFirestore();
-                showAdminMsg(`✅ Successfully updated ${sem} → ${branch}`, "#c8e6c9");
-                return true;
-            } catch (err) {
-                showAdminMsg(`❌ Save error: ${err.message}`, "#ffcdd2");
-                return false;
-            }
+        // Student Viewer Render
+        function renderStudentViewer() {
+            // Student viewer uses the same currentSyllabus data
+            // No additional render needed as viewer uses currentSyllabus directly
         }
 
-        // Delete PDF entry
-        async function deletePdfEntryFirestore(sem, branch) {
-            if (!sem || !branch) return;
-            try {
-                const semDocRef = doc(db, SYLLABUS_COLLECTION, sem);
-                const docSnap = await getDoc(semDocRef);
-                if (docSnap.exists()) {
-                    let semData = docSnap.data();
-                    if (semData[branch]) {
-                        delete semData[branch];
-                        if (Object.keys(semData).length === 0) {
-                            await deleteDoc(semDocRef);
-                        } else {
-                            await setDoc(semDocRef, semData);
-                        }
-                        await loadSyllabusFromFirestore();
-                        showAdminMsg(`🗑️ Removed ${sem} / ${branch}`, "#ffcdd2");
-                    } else {
-                        showAdminMsg(`⚠️ Entry not found for ${sem} / ${branch}`, "#fff3cd");
-                    }
-                } else {
-                    showAdminMsg(`⚠️ Semester "${sem}" not found.`, "#fff3cd");
-                }
-            } catch (err) {
-                showAdminMsg(`Delete error: ${err.message}`, "#ffcdd2");
-            }
-        }
-
-        // Render admin table
+        // Admin Table Render
         function renderAdminTable() {
             const tbody = document.getElementById('adminTableBody');
             if (!tbody) return;
@@ -159,375 +111,403 @@ Here is the HTML document with the menu toggle removed, providing a clean interf
                         <td><strong>${escapeHtml(branch)}</strong></td>
                         <td><a href="${escapeHtml(link)}" target="_blank" style="font-size: 11px; word-break: break-all;">${escapeHtml(link.substring(0, 55))}...</a></td>
                         <td>
-                            <button class="edit-link" onclick="window.editEntryHandler('${escapeHtml(sem)}', '${escapeHtml(branch)}', '${escapeHtml(link.replace(/'/g, "\\'"))}')">✏️ Edit</button>
-                            <button class="del-link" onclick="window.deleteEntryHandler('${escapeHtml(sem)}', '${escapeHtml(branch)}')">🗑️ Del</button>
+                            <button class="edit-link" onclick="window.editEntry('${escapeHtml(sem)}', '${escapeHtml(branch)}', '${escapeHtml(link.replace(/'/g, "\\'"))}')">✏️ Edit</button>
+                            <button class="del-link" onclick="window.deleteEntry('${escapeHtml(sem)}', '${escapeHtml(branch)}')">🗑️ Del</button>
                         </td>
                     </tr>`;
                 }
             }
             if (html === '') {
-                html = '<tr><td colspan="4" style="text-align:center;">No syllabus entries. Add via form above or reset default.</td></tr>';
+                html = '<tr><td colspan="4" style="text-align:center;">No syllabus entries. Add via form or reset default.</td></tr>';
             }
             tbody.innerHTML = html;
         }
 
-        function escapeHtml(str) { return str.replace(/[&<>]/g, function(m){if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
+        function escapeHtml(str) { return str.replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
 
-        // Admin message helper
-        function showAdminMsg(msg, bg = "#e8f0fe") {
-            const div = document.getElementById('adminMsg');
-            if (div) {
-                div.style.backgroundColor = bg;
-                div.style.padding = "12px";
-                div.style.borderRadius = "12px";
-                div.innerHTML = msg;
-                setTimeout(() => { if (div) div.innerHTML = ''; }, 4000);
-            }
-        }
-
-        // Edit entry handler
-        window.editEntryHandler = function(sem, branch, link) {
+        window.editEntry = function(sem, branch, link) {
             document.getElementById('adminSem').value = sem;
             document.getElementById('adminBranch').value = branch;
             document.getElementById('pdfUrlInput').value = link;
             showAdminMsg(`📝 Editing: ${sem} - ${branch}. Update URL and click Save.`, "#e3f2fd");
         };
 
-        // Delete entry handler
-        window.deleteEntryHandler = async function(sem, branch) {
+        window.deleteEntry = async function(sem, branch) {
             if (confirm(`Delete syllabus for ${sem} - ${branch}?`)) {
-                await deletePdfEntryFirestore(sem, branch);
+                try {
+                    const semDocRef = doc(db, SYLLABUS_COLLECTION, sem);
+                    const docSnap = await getDoc(semDocRef);
+                    if (docSnap.exists()) {
+                        let semData = docSnap.data();
+                        delete semData[branch];
+                        if (Object.keys(semData).length === 0) await deleteDoc(semDocRef);
+                        else await setDoc(semDocRef, semData);
+                        await loadSyllabus();
+                        showAdminMsg(`🗑️ Removed ${sem} / ${branch}`, "#ffcdd2");
+                    }
+                } catch (err) { showAdminMsg(`Error: ${err.message}`, "#ffcdd2"); }
             }
         };
 
-        // ========== AUTHENTICATION ==========
-        function updateUILoggedIn(user) {
-            if (user) {
-                authStatusDiv.innerHTML = `<i class="fas fa-check-circle"></i> ✅ Logged in as ${user.displayName || user.email}`;
-                if (user.photoURL) userAvatar.src = user.photoURL;
-                userNameSpan.innerText = user.displayName || "User";
-                userEmailSpan.innerText = user.email;
-                adminSidebar.classList.remove('sidebar-hidden');
-                adminSidebar.classList.add('sidebar-visible');
-                if (adminPanelContent) adminPanelContent.style.display = 'block';
-                loadSyllabusFromFirestore();
-            } else {
-                authStatusDiv.innerHTML = `<i class="fas fa-sign-in-alt"></i> 🔐 Not logged in. Sign in with Google to manage syllabus.`;
-                adminSidebar.classList.remove('sidebar-visible');
-                adminSidebar.classList.add('sidebar-hidden');
-                if (adminPanelContent) adminPanelContent.style.display = 'none';
-                const tbody = document.getElementById('adminTableBody');
-                if (tbody) tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">🔒 Please login with Google to view & manage syllabus</td></tr>';
-                currentSyllabus = {};
-            }
-        }
-
-        onAuthStateChanged(auth, (user) => {
-            updateUILoggedIn(user);
-        });
-
-        loginBtn?.addEventListener('click', async () => {
-            try {
-                const result = await signInWithPopup(auth, provider);
-                updateUILoggedIn(result.user);
-            } catch (err) {
-                console.error(err);
-                authStatusDiv.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Login failed: ${err.message}`;
-            }
-        });
-
-        logoutBtn?.addEventListener('click', async () => {
-            await signOut(auth);
-            updateUILoggedIn(null);
-        });
-
-        // Admin Form event listeners
-        document.getElementById('savePdfBtn')?.addEventListener('click', async () => {
+        async function savePdfEntry() {
             const sem = document.getElementById('adminSem').value;
             const branch = document.getElementById('adminBranch').value;
             let url = document.getElementById('pdfUrlInput').value.trim();
-            if (!sem || !branch) { showAdminMsg('❌ Please select both Semester and Branch!', '#ffcdd2'); return; }
-            if (!url) { showAdminMsg('❌ Please enter a valid PDF embed link.', '#ffcdd2'); return; }
-            if (!url.startsWith('http')) { showAdminMsg('❌ Link must start with http:// or https://', '#ffcdd2'); return; }
-            await saveOrUpdatePdfEntry(sem, branch, url);
-            document.getElementById('pdfUrlInput').value = '';
-        });
-
-        document.getElementById('deletePdfBtn')?.addEventListener('click', async () => {
-            const sem = document.getElementById('adminSem').value;
-            const branch = document.getElementById('adminBranch').value;
-            if (!sem || !branch) { showAdminMsg('❌ Select semester & branch to delete', '#ffcdd2'); return; }
-            await deletePdfEntryFirestore(sem, branch);
-        });
-
-        document.getElementById('resetDefaultBtn')?.addEventListener('click', resetToDefaultFirestore);
-
-        // ========== VIEWER MODAL LOGIC ==========
-        const branchSelect = document.getElementById('branch');
-        const semSelect = document.getElementById('sem');
-        const openBtn = document.getElementById('openBtn');
-        const msgDiv = document.getElementById('msg');
-        const pdfModal = document.getElementById('pdfModal');
-        const pdfFrame = document.getElementById('pdfFrame');
-        const modalDownloadBtn = document.getElementById('modalDownloadBtn');
-
-        function showViewerMessage(text, isError = false) {
-            msgDiv.style.background = isError ? '#ffebee' : '#e8f0fe';
-            msgDiv.innerHTML = text;
-            setTimeout(() => {
-                if (msgDiv.innerHTML === text) msgDiv.innerHTML = "✅ Choose branch & semester to view syllabus.";
-            }, 4000);
+            if (!sem || !branch) { showAdminMsg('Select Semester & Branch!', '#ffcdd2'); return; }
+            if (!url) { showAdminMsg('Enter PDF link!', '#ffcdd2'); return; }
+            try {
+                let semData = currentSyllabus[sem] || {};
+                semData[branch] = url;
+                await setDoc(doc(db, SYLLABUS_COLLECTION, sem), semData);
+                await loadSyllabus();
+                showAdminMsg(`✅ Saved ${sem} → ${branch}`, "#c8e6c9");
+                document.getElementById('pdfUrlInput').value = '';
+            } catch (err) { showAdminMsg(`Save error: ${err.message}`, "#ffcdd2"); }
         }
 
+        async function resetToDefault() {
+            if (!confirm("⚠️ Reset will erase all custom data. Continue?")) return;
+            try {
+                const snapshot = await getDocs(collection(db, SYLLABUS_COLLECTION));
+                for (const docSnap of snapshot.docs) await deleteDoc(doc(db, SYLLABUS_COLLECTION, docSnap.id));
+                for (const [sem, branches] of Object.entries(DEFAULT_SYLLABUS)) {
+                    await setDoc(doc(db, SYLLABUS_COLLECTION, sem), branches);
+                }
+                await loadSyllabus();
+                showAdminMsg("✅ Reset to default syllabus!", "#c8e6c9");
+            } catch (err) { showAdminMsg("Reset failed: " + err.message, "#ffcdd2"); }
+        }
+
+        function showAdminMsg(msg, bg) {
+            const div = document.getElementById('adminMsg');
+            if (div) { div.style.backgroundColor = bg; div.style.padding = "12px"; div.style.borderRadius = "12px"; div.innerHTML = msg; setTimeout(() => { if(div) div.innerHTML = ''; }, 4000); }
+        }
+
+        // Auth Functions
+        async function handleStudentLogin(email, password) {
+            try {
+                const userCred = await signInWithEmailAndPassword(auth, email, password);
+                const userDoc = await getDoc(doc(db, "users", userCred.user.uid));
+                if (userDoc.exists() && userDoc.data().role === 'student') {
+                    currentUserRole = 'student';
+                    currentUserData = userDoc.data();
+                    showDashboard('student');
+                } else {
+                    await auth.signOut();
+                    alert("Invalid student account. Please register as student.");
+                }
+            } catch (err) { alert("Login failed: " + err.message); }
+        }
+
+        async function handleStudentRegister(name, email, password, rollNo, branch, semester) {
+            try {
+                const userCred = await createUserWithEmailAndPassword(auth, email, password);
+                await setDoc(doc(db, "users", userCred.user.uid), {
+                    name, email, role: 'student', rollNo, branch, semester, createdAt: new Date().toISOString()
+                });
+                currentUserRole = 'student';
+                currentUserData = { name, email, role: 'student', rollNo, branch, semester };
+                showDashboard('student');
+            } catch (err) { alert("Registration failed: " + err.message); }
+        }
+
+        async function handleAdminLogin(email, password) {
+            try {
+                const userCred = await signInWithEmailAndPassword(auth, email, password);
+                const userDoc = await getDoc(doc(db, "users", userCred.user.uid));
+                if (userDoc.exists() && userDoc.data().role === 'admin') {
+                    currentUserRole = 'admin';
+                    currentUserData = userDoc.data();
+                    showDashboard('admin');
+                    await loadSyllabus();
+                } else {
+                    await auth.signOut();
+                    alert("Invalid admin credentials.");
+                }
+            } catch (err) { alert("Admin login failed: " + err.message); }
+        }
+
+        async function handleAdminRegister(email, password, adminKey) {
+            if (adminKey !== 'ADMIN2025') {
+                alert("Invalid admin registration key!");
+                return;
+            }
+            try {
+                const userCred = await createUserWithEmailAndPassword(auth, email, password);
+                await setDoc(doc(db, "users", userCred.user.uid), {
+                    name: "Administrator", email, role: 'admin', createdAt: new Date().toISOString()
+                });
+                currentUserRole = 'admin';
+                currentUserData = { name: "Administrator", email, role: 'admin' };
+                showDashboard('admin');
+                await initDefaultSyllabus();
+                await loadSyllabus();
+            } catch (err) { alert("Admin registration failed: " + err.message); }
+        }
+
+        function showDashboard(role) {
+            loginSelection.style.display = 'none';
+            if (role === 'student') {
+                studentDashboard.style.display = 'block';
+                adminDashboard.style.display = 'none';
+                document.querySelector('.admin-sidebar').style.display = 'none';
+                document.querySelector('.student-sidebar').style.display = 'block';
+                updateUserInfo();
+            } else {
+                studentDashboard.style.display = 'none';
+                adminDashboard.style.display = 'block';
+                document.querySelector('.admin-sidebar').style.display = 'block';
+                document.querySelector('.student-sidebar').style.display = 'none';
+                updateUserInfo();
+                renderAdminTable();
+            }
+        }
+
+        function updateUserInfo() {
+            if (currentUserData) {
+                userNameSpan.innerText = currentUserData.name || currentUserData.email;
+                userEmailSpan.innerText = currentUserData.email;
+                userRoleSpan.innerText = currentUserRole === 'admin' ? 'Administrator' : `Student (${currentUserData.branch || 'N/A'})`;
+                if (currentUserData.rollNo) document.getElementById('studentRollNo') && (document.getElementById('studentRollNo').innerText = currentUserData.rollNo);
+                if (currentUserData.branch) document.getElementById('studentBranch') && (document.getElementById('studentBranch').innerText = currentUserData.branch);
+                if (currentUserData.semester) document.getElementById('studentSemester') && (document.getElementById('studentSemester').innerText = currentUserData.semester);
+            }
+        }
+
+        async function logout() {
+            await signOut(auth);
+            currentUserRole = null;
+            currentUserData = null;
+            loginSelection.style.display = 'block';
+            studentDashboard.style.display = 'none';
+            adminDashboard.style.display = 'none';
+            document.querySelector('.admin-sidebar').style.display = 'none';
+            document.querySelector('.student-sidebar').style.display = 'none';
+            document.getElementById('studentLoginForm').style.display = 'none';
+            document.getElementById('studentRegisterForm').style.display = 'none';
+            document.getElementById('adminLoginForm').style.display = 'none';
+            document.getElementById('adminRegisterForm').style.display = 'none';
+            document.getElementById('studentLoginBtn').classList.add('active');
+            document.getElementById('studentRegisterBtn').classList.remove('active');
+            document.getElementById('adminLoginBtn').classList.remove('active');
+            document.getElementById('adminRegisterBtn').classList.remove('active');
+        }
+
+        // Toggle forms
+        window.showStudentLogin = () => {
+            document.getElementById('studentLoginForm').style.display = 'block';
+            document.getElementById('studentRegisterForm').style.display = 'none';
+            document.getElementById('studentLoginBtn').classList.add('active');
+            document.getElementById('studentRegisterBtn').classList.remove('active');
+        };
+        window.showStudentRegister = () => {
+            document.getElementById('studentLoginForm').style.display = 'none';
+            document.getElementById('studentRegisterForm').style.display = 'block';
+            document.getElementById('studentRegisterBtn').classList.add('active');
+            document.getElementById('studentLoginBtn').classList.remove('active');
+        };
+        window.showAdminLogin = () => {
+            document.getElementById('adminLoginForm').style.display = 'block';
+            document.getElementById('adminRegisterForm').style.display = 'none';
+            document.getElementById('adminLoginBtn').classList.add('active');
+            document.getElementById('adminRegisterBtn').classList.remove('active');
+        };
+        window.showAdminRegister = () => {
+            document.getElementById('adminLoginForm').style.display = 'none';
+            document.getElementById('adminRegisterForm').style.display = 'block';
+            document.getElementById('adminRegisterBtn').classList.add('active');
+            document.getElementById('adminLoginBtn').classList.remove('active');
+        };
+
+        // Event Listeners
+        document.getElementById('studentLoginSubmit').onclick = () => {
+            const email = document.getElementById('studentEmail').value;
+            const password = document.getElementById('studentPassword').value;
+            handleStudentLogin(email, password);
+        };
+        document.getElementById('studentRegisterSubmit').onclick = () => {
+            const name = document.getElementById('studentRegName').value;
+            const email = document.getElementById('studentRegEmail').value;
+            const password = document.getElementById('studentRegPassword').value;
+            const rollNo = document.getElementById('studentRoll').value;
+            const branch = document.getElementById('studentRegBranch').value;
+            const semester = document.getElementById('studentRegSem').value;
+            handleStudentRegister(name, email, password, rollNo, branch, semester);
+        };
+        document.getElementById('adminLoginSubmit').onclick = () => {
+            const email = document.getElementById('adminEmail').value;
+            const password = document.getElementById('adminPassword').value;
+            handleAdminLogin(email, password);
+        };
+        document.getElementById('adminRegisterSubmit').onclick = () => {
+            const email = document.getElementById('adminRegEmail').value;
+            const password = document.getElementById('adminRegPassword').value;
+            const key = document.getElementById('adminKey').value;
+            handleAdminRegister(email, password, key);
+        };
+        document.getElementById('studentLogoutBtn').onclick = logout;
+        document.getElementById('adminLogoutBtn').onclick = logout;
+        document.getElementById('savePdfBtn')?.addEventListener('click', savePdfEntry);
+        document.getElementById('resetDefaultBtn')?.addEventListener('click', resetToDefault);
+
+        // Student Viewer Logic
+        const branchSelect = document.getElementById('studentBranchSelect');
+        const semSelect = document.getElementById('studentSemSelect');
+        const openBtn = document.getElementById('studentOpenBtn');
+        const msgDiv = document.getElementById('studentMsg');
+        const pdfModal = document.getElementById('pdfModal');
+        const pdfFrame = document.getElementById('pdfFrame');
+        
         openBtn.onclick = () => {
             const branch = branchSelect.value;
             const sem = semSelect.value;
-            if (!branch || !sem) {
-                showViewerMessage('❌ Please select both branch & semester.', true);
-                return;
-            }
+            if (!branch || !sem) { msgDiv.innerHTML = '❌ Please select both branch & semester.'; return; }
             if (!currentSyllabus[sem] || !currentSyllabus[sem][branch]) {
-                showViewerMessage(`❌ Syllabus not available for ${branch} - ${sem}. Use Admin panel to add.`, true);
+                msgDiv.innerHTML = `❌ Syllabus not available for ${branch} - ${sem}. Contact admin.`;
                 return;
             }
-            const pdfLink = currentSyllabus[sem][branch];
-            pdfFrame.src = pdfLink;
+            pdfFrame.src = currentSyllabus[sem][branch];
             pdfModal.style.display = 'flex';
-            showViewerMessage(`📄 Preview opened. You can download from modal.`);
+            msgDiv.innerHTML = '📄 Preview opened.';
         };
+        window.closePDFModal = () => { pdfModal.style.display = 'none'; pdfFrame.src = ''; };
+        window.closePDFModalOnBg = (e) => { if(e.target === pdfModal) closePDFModal(); };
 
-        window.closePDFModal = function() {
-            pdfModal.style.display = 'none';
-            pdfFrame.src = '';
-        };
-        window.closePDFModalOnBg = function(event) { if (event.target === pdfModal) closePDFModal(); };
-        
-        modalDownloadBtn.onclick = () => {
-            const currentSrc = pdfFrame.src;
-            if (!currentSrc || currentSrc === '') return;
-            const a = document.createElement('a');
-            a.href = currentSrc;
-            a.download = `syllabus_${branchSelect.value}_${semSelect.value}.pdf`;
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            showViewerMessage('✅ Download started!');
-        };
-
-        // Developer modal
-        const devModal = document.getElementById('devModal');
-        const devBtn = document.getElementById('devBtn');
-        window.closeDevModal = function() { devModal.style.display = 'none'; };
-        window.closeDevModalOnBg = function(event) { if (event.target === devModal) closeDevModal(); };
-        devBtn.onclick = () => { devModal.style.display = 'flex'; };
-
-        // Tab switching
-        window.switchTab = function(tab) {
-            const viewerPanel = document.getElementById('viewerPanel');
-            const adminPanelDiv = document.getElementById('adminPanel');
-            const btns = document.querySelectorAll('.tab-btn');
-            btns.forEach(btn => btn.classList.remove('active'));
-            if (tab === 'viewer') {
-                viewerPanel.classList.add('active-panel');
-                adminPanelDiv.classList.remove('active-panel');
-                btns[0].classList.add('active');
-            } else {
-                viewerPanel.classList.remove('active-panel');
-                adminPanelDiv.classList.add('active-panel');
-                btns[1].classList.add('active');
-                if (auth.currentUser) renderAdminTable();
-                else showAdminMsg("🔐 Please login using Google to manage syllabus.", "#ffcdd2");
-            }
-        };
-
-        // Escape key to close modals
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                closePDFModal();
-                if (devModal) devModal.style.display = 'none';
-            }
-        });
-
-        // Initial load
-        loadSyllabusFromFirestore().catch(console.warn);
+        // Initialize
+        initDefaultSyllabus();
+        loadSyllabus();
+        showStudentLogin();
     </script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
-        .app-layout { display: flex; max-width: 1400px; margin: 0 auto; gap: 20px; }
-        /* SIDEBAR (Admin Dashboard) - always visible when logged in */
-        .admin-sidebar {
-            width: 280px;
-            background: rgba(255,255,255,0.98);
-            border-radius: 28px;
-            padding: 20px;
-            box-shadow: 0 20px 35px rgba(0,0,0,0.2);
-            transition: all 0.3s ease;
-            backdrop-filter: blur(2px);
-            flex-shrink: 0;
-        }
-        .admin-sidebar.sidebar-hidden { display: none; }
-        .admin-sidebar.sidebar-visible { display: block; }
-        .user-card {
-            text-align: center;
-            border-bottom: 2px solid #eee;
-            padding-bottom: 18px;
-            margin-bottom: 20px;
-        }
-        .user-card img { width: 80px; border-radius: 50%; margin-bottom: 10px; border: 3px solid #667eea; object-fit: cover; height: 80px; }
-        .user-card h4 { font-size: 1.2rem; color: #333; }
-        .user-card p { font-size: 12px; color: #666; word-break: break-all; }
-        .sidebar-menu { list-style: none; }
-        .sidebar-menu li { margin: 18px 0; }
-        .sidebar-menu li a { text-decoration: none; color: #444; font-weight: 600; display: flex; gap: 12px; align-items: center; padding: 10px 12px; border-radius: 40px; transition: 0.2s; cursor: pointer; }
-        .sidebar-menu li a:hover { background: linear-gradient(135deg, #667eea20, #764ba220); color: #667eea; }
-        .logout-item { margin-top: 30px; border-top: 1px solid #eee; padding-top: 15px; }
-        .logout-btn { background: #ff5e7c20; color: #d32f2f; border-radius: 40px; text-align: center; padding: 10px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .logout-btn:hover { background: #ff5e7c40; }
-        /* MAIN CONTENT */
-        .main-content { flex: 1; }
-        .container { width: 100%; }
-        .tabs { display: flex; gap: 15px; margin-bottom: 25px; flex-wrap: wrap; justify-content: center; }
-        .tab-btn { background: white; border: none; padding: 12px 28px; font-weight: 600; border-radius: 50px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1); transition: 0.2s; }
-        .tab-btn.active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; transform: translateY(-2px); }
-        .panel { display: none; animation: fadeIn 0.3s; }
-        .panel.active-panel { display: block; }
-        .box { background: white; border-radius: 25px; padding: 28px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        h2 { font-size: 26px; margin-bottom: 20px; text-align: center; background: linear-gradient(135deg, #667eea, #764ba2); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
-        select, input { width: 100%; padding: 12px 16px; margin-top: 12px; border-radius: 15px; border: 2px solid #e0e0e0; font-size: 14px; }
-        select:focus, input:focus { outline: none; border-color: #667eea; }
-        button { width: 100%; padding: 12px; margin-top: 12px; font-weight: bold; border-radius: 40px; border: none; background: linear-gradient(135deg, #667eea, #764ba2); color: white; cursor: pointer; transition: 0.2s; }
-        button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102,126,234,0.3); }
-        .danger-btn { background: linear-gradient(135deg, #f093fb, #f5576c); }
-        .secondary-btn { background: linear-gradient(135deg, #4facfe, #00f2fe); }
-        .admin-table-wrap { overflow-x: auto; margin: 20px 0; background: #f8f9fa; border-radius: 20px; }
+        body { font-family: 'Segoe UI', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
+        .app-container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        .login-container { background: white; border-radius: 30px; padding: 40px; max-width: 500px; margin: 50px auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+        .role-tabs { display: flex; gap: 10px; margin-bottom: 25px; }
+        .role-btn { flex: 1; padding: 12px; border: none; border-radius: 50px; font-weight: bold; cursor: pointer; background: #f0f0f0; transition: 0.3s; }
+        .role-btn.active { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
+        .auth-form { display: none; }
+        .auth-form input, .auth-form select { width: 100%; padding: 12px; margin: 10px 0; border-radius: 12px; border: 2px solid #e0e0e0; }
+        .auth-form button { width: 100%; padding: 12px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 50px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .dashboard { display: none; }
+        .sidebar { width: 280px; background: white; border-radius: 25px; padding: 20px; position: fixed; left: 20px; top: 20px; bottom: 20px; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
+        .main-content { margin-left: 320px; padding: 20px; }
+        .user-card { text-align: center; padding-bottom: 20px; border-bottom: 2px solid #eee; margin-bottom: 20px; }
+        .user-card img { width: 80px; border-radius: 50%; margin-bottom: 10px; }
+        .menu-item { padding: 12px 15px; margin: 8px 0; border-radius: 12px; cursor: pointer; transition: 0.2s; }
+        .menu-item:hover { background: #f0f0f0; }
+        .logout-btn { background: #ff5e7c; color: white; text-align: center; padding: 12px; border-radius: 12px; cursor: pointer; margin-top: 20px; }
+        .box { background: white; border-radius: 25px; padding: 25px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        select, button { width: 100%; padding: 12px; margin-top: 10px; border-radius: 12px; border: 2px solid #e0e0e0; }
+        button { background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; cursor: pointer; font-weight: bold; }
+        .admin-table-wrap { overflow-x: auto; margin-top: 20px; }
         table { width: 100%; border-collapse: collapse; }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; font-size: 13px; }
         th { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
-        .badge { background: #e3f2fd; color: #1976d2; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; display: inline-block; }
-        .edit-link, .del-link { padding: 5px 12px; border-radius: 30px; font-size: 11px; cursor: pointer; border: none; margin: 0 3px; color: white; display: inline-block; }
+        .badge { background: #e3f2fd; color: #1976d2; padding: 4px 10px; border-radius: 20px; font-size: 11px; }
+        .edit-link, .del-link { padding: 5px 12px; border-radius: 20px; font-size: 11px; cursor: pointer; border: none; margin: 0 3px; color: white; }
         .edit-link { background: #ff9800; }
         .del-link { background: #f44336; }
+        .flex-row { display: flex; gap: 15px; }
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 10000; }
-        .modal-box { background: white; width: 90%; max-width: 1000px; max-height: 90vh; border-radius: 28px; overflow: hidden; display: flex; flex-direction: column; }
-        .modal-top { background: linear-gradient(135deg, #667eea, #764ba2); padding: 15px 20px; display: flex; justify-content: space-between; color: white; align-items: center; }
-        .close-modal { background: rgba(255,255,255,0.2); padding: 8px 20px; border-radius: 30px; border: none; color: white; cursor: pointer; width: auto; margin: 0; }
-        .close-modal:hover { background: rgba(255,255,255,0.3); transform: none; }
+        .modal-box { background: white; width: 90%; max-width: 1000px; border-radius: 25px; overflow: hidden; }
+        .modal-top { background: linear-gradient(135deg, #667eea, #764ba2); padding: 15px; display: flex; justify-content: space-between; color: white; }
         iframe { width: 100%; height: 70vh; border: none; }
-        .flex-row { display: flex; gap: 15px; flex-wrap: wrap; margin-top: 10px; }
-        .flex-row select, .flex-row button { flex: 1; margin-top: 0; }
-        footer { text-align: center; padding: 25px; color: white; font-size: 13px; opacity: 0.9; }
-        .logo { width: 80px; margin: 0 auto 15px; display: block; border-radius: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-        hr { margin: 20px 0; }
-        @media (max-width: 800px) {
-            .app-layout { flex-direction: column; }
-            .admin-sidebar { width: 100%; margin-bottom: 20px; }
+        @media (max-width: 768px) {
+            .sidebar { position: relative; width: 100%; left: 0; margin-bottom: 20px; }
+            .main-content { margin-left: 0; }
         }
-        @keyframes fadeIn { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
+        .student-sidebar, .admin-sidebar { display: none; }
+        h2 { background: linear-gradient(135deg, #667eea, #764ba2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 20px; }
     </style>
 </head>
 <body>
-<div class="app-layout">
-    <!-- Sidebar Admin Dashboard (hidden until login) - menu toggle removed -->
-    <div id="adminSidebar" class="admin-sidebar sidebar-hidden">
-        <div class="user-card">
-            <img id="userAvatar" src="https://via.placeholder.com/80" alt="avatar">
-            <h4 id="userName">Guest</h4>
-            <p id="userEmail">not logged in</p>
+<div class="app-container">
+    <!-- Login Selection -->
+    <div id="loginSelection" class="login-container">
+        <h2 style="text-align:center;">📚 BEU Syllabus Portal</h2>
+        <div class="role-tabs">
+            <button class="role-btn active" id="studentLoginBtn" onclick="showStudentLogin()">👨‍🎓 Student Login</button>
+            <button class="role-btn" id="adminLoginBtn" onclick="showAdminLogin()">👑 Admin Login</button>
         </div>
-        <ul class="sidebar-menu">
-            <li><a href="#" onclick="switchTab('admin'); return false;"><i class="fas fa-database"></i> 📚 Syllabus Manager</a></li>
-            <li><a href="#" id="resetDefaultLink" style="cursor:pointer;" onclick="document.getElementById('resetDefaultBtn')?.click(); return false;"><i class="fas fa-sync-alt"></i> 🔄 Reset Default Database</a></li>
-            <li class="logout-item"><div id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Sign Out</div></li>
-        </ul>
-    </div>
-
-    <div class="main-content">
-        <div class="container">
-            <div class="tabs">
-                <button class="tab-btn active" onclick="switchTab('viewer')">📘 Syllabus Viewer</button>
-                <button class="tab-btn" onclick="switchTab('admin')">🔐 Admin Panel (Manage PDFs)</button>
-            </div>
-
-            <!-- Viewer Panel -->
-            <div id="viewerPanel" class="panel active-panel">
-                <div class="box">
-                    <img class="logo" src="https://raw.githubusercontent.com/mdzafar864/BEU-Syllabus-App/main/logo.png" onerror="this.src='https://via.placeholder.com/80?text=BEU'">
-                    <h2>📖 BEU Syllabus Viewer</h2>
-                    <select id="branch">
-                        <option value="">-- Select Branch --</option>
-                        <option value="CE">Civil Engineering (CE)</option>
-                        <option value="CS">Computer Science & Engineering (CSE)</option>
-                        <option value="IOT">CSE (IOT)</option>
-                        <option value="EE">Electrical Engineering (EE)</option>
-                        <option value="ECE">Electronics & Communication (ECE)</option>
-                        <option value="ME">Mechanical Engineering (ME)</option>
-                    </select>
-                    <select id="sem">
-                        <option value="">-- Select Semester --</option>
-                        <option value="1stNew">1st Semester (New)</option><option value="1stOld">1st Semester (Old)</option>
-                        <option value="2ndNew">2nd Semester (New)</option><option value="2ndOld">2nd Semester (Old)</option>
-                        <option value="3rdNew">3rd Semester (New)</option><option value="3rdOld">3rd Semester (Old)</option>
-                        <option value="4th">4th Semester</option><option value="5th">5th Semester</option>
-                        <option value="6th">6th Semester</option><option value="7th">7th Semester</option><option value="8th">8th Semester</option>
-                    </select>
-                    <button id="openBtn">🔍 Open Syllabus</button>
-                    <div id="msg" style="background:#e8f0fe; padding:12px; border-radius:15px;">✅ Choose branch & semester to view syllabus.</div>
-                    <button id="devBtn" class="secondary-btn">👨‍💻 Developer Info</button>
-                </div>
-            </div>
-
-            <!-- Admin Panel (Database Management) -->
-            <div id="adminPanel" class="panel">
-                <div class="box">
-                    <h2>⚙️ Admin Dashboard — PDF Management</h2>
-                    <div id="authStatus" style="margin-bottom:15px; background:#e0e7ff; padding:10px; border-radius:30px; text-align:center;"><i class="fas fa-google"></i> Sign in with Google to manage</div>
-                    <button id="googleLoginBtn" style="background:#4285F4; margin-bottom:15px;"><i class="fab fa-google"></i> 🔑 Sign in with Google</button>
-                    <div id="adminPanelContent" style="display:none;">
-                        <div class="flex-row">
-                            <select id="adminSem"><option value="">-- Semester --</option><option value="1stNew">1st New</option><option value="1stOld">1st Old</option><option value="2ndNew">2nd New</option><option value="2ndOld">2nd Old</option><option value="3rdNew">3rd New</option><option value="3rdOld">3rd Old</option><option value="4th">4th</option><option value="5th">5th</option><option value="6th">6th</option><option value="7th">7th</option><option value="8th">8th</option></select>
-                            <select id="adminBranch"><option value="">-- Branch --</option><option value="CE">CE</option><option value="CS">CS</option><option value="IOT">IOT</option><option value="EE">EE</option><option value="ECE">ECE</option><option value="ME">ME</option></select>
-                        </div>
-                        <input type="text" id="pdfUrlInput" placeholder="Paste PDF Embed Link (Google Drive preview link or direct PDF URL)">
-                        <div class="flex-row"><button id="savePdfBtn">💾 Save / Update PDF</button><button id="deletePdfBtn" class="danger-btn">🗑️ Delete PDF Entry</button></div>
-                        <div id="adminMsg"></div>
-                        <hr>
-                        <h3>📋 Current Syllabus Database</h3>
-                        <div class="admin-table-wrap"><table><thead><tr><th>Semester</th><th>Branch</th><th>PDF Link</th><th style="width:120px">Actions</th></tr></thead><tbody id="adminTableBody"><tr><td colspan="4">Login to view data</td></tr></tbody></table></div>
-                        <button id="resetDefaultBtn" class="danger-btn" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">↻ Reset to Default Syllabus</button>
-                    </div>
-                </div>
-            </div>
-            <footer>© 2025 BEU Syllabus • Firebase Auth + Admin DB Manager | Developed by <b>Md Zafar</b></footer>
+        <!-- Student Forms -->
+        <div id="studentLoginForm" class="auth-form" style="display:block;">
+            <input type="email" id="studentEmail" placeholder="Student Email" required>
+            <input type="password" id="studentPassword" placeholder="Password" required>
+            <button id="studentLoginSubmit">Login as Student</button>
+            <p style="text-align:center; margin-top:15px;">New student? <a href="#" onclick="showStudentRegister()">Register here</a></p>
+        </div>
+        <div id="studentRegisterForm" class="auth-form">
+            <input type="text" id="studentRegName" placeholder="Full Name" required>
+            <input type="email" id="studentRegEmail" placeholder="Email" required>
+            <input type="password" id="studentRegPassword" placeholder="Password" required>
+            <input type="text" id="studentRoll" placeholder="Roll Number" required>
+            <select id="studentRegBranch"><option value="">Select Branch</option><option value="CE">CE</option><option value="CS">CSE</option><option value="IOT">IOT</option><option value="EE">EE</option><option value="ECE">ECE</option><option value="ME">ME</option></select>
+            <select id="studentRegSem"><option value="">Select Semester</option><option value="1stNew">1st New</option><option value="1stOld">1st Old</option><option value="2ndNew">2nd New</option><option value="2ndOld">2nd Old</option><option value="3rdNew">3rd New</option><option value="3rdOld">3rd Old</option><option value="4th">4th</option><option value="5th">5th</option><option value="6th">6th</option><option value="7th">7th</option><option value="8th">8th</option></select>
+            <button id="studentRegisterSubmit">Register</button>
+            <p style="text-align:center; margin-top:15px;">Already have account? <a href="#" onclick="showStudentLogin()">Login</a></p>
+        </div>
+        <!-- Admin Forms -->
+        <div id="adminLoginForm" class="auth-form" style="display:none;">
+            <input type="email" id="adminEmail" placeholder="Admin Email" required>
+            <input type="password" id="adminPassword" placeholder="Password" required>
+            <button id="adminLoginSubmit">Login as Admin</button>
+            <p style="text-align:center; margin-top:15px;">New admin? <a href="#" onclick="showAdminRegister()">Register with key</a></p>
+        </div>
+        <div id="adminRegisterForm" class="auth-form" style="display:none;">
+            <input type="email" id="adminRegEmail" placeholder="Admin Email" required>
+            <input type="password" id="adminRegPassword" placeholder="Password" required>
+            <input type="password" id="adminKey" placeholder="Admin Registration Key" required>
+            <button id="adminRegisterSubmit">Register Admin</button>
+            <p style="text-align:center; margin-top:15px;"><a href="#" onclick="showAdminLogin()">Back to Login</a></p>
         </div>
     </div>
-</div>
 
-<!-- PDF Modal -->
-<div id="pdfModal" class="modal" onclick="closePDFModalOnBg(event)">
-    <div class="modal-box">
-        <div class="modal-top"><strong>📄 Syllabus PDF Preview</strong><div><button class="close-modal" onclick="closePDFModal()">Close</button><button id="modalDownloadBtn" style="background:#4caf50; margin-left:10px;">⬇️ Download</button></div></div>
-        <iframe id="pdfFrame" title="Syllabus PDF"></iframe>
+    <!-- Student Dashboard -->
+    <div id="studentDashboard" class="dashboard">
+        <div class="sidebar student-sidebar">
+            <div class="user-card"><img id="userAvatar" src="https://via.placeholder.com/80"><h4 id="userName">Student</h4><p id="userEmail">email</p><p id="userRole">Role</p><hr><p><strong>Roll:</strong> <span id="studentRollNo">-</span></p><p><strong>Branch:</strong> <span id="studentBranch">-</span></p><p><strong>Semester:</strong> <span id="studentSemester">-</span></p></div>
+            <div class="menu-item"><i class="fas fa-book"></i> Syllabus Viewer</div>
+            <div id="studentLogoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</div>
+        </div>
+        <div class="main-content">
+            <div class="box"><h2>📖 BEU Syllabus Viewer</h2>
+                <select id="studentBranchSelect"><option value="">-- Branch --</option><option value="CE">CE</option><option value="CS">CSE</option><option value="IOT">IOT</option><option value="EE">EE</option><option value="ECE">ECE</option><option value="ME">ME</option></select>
+                <select id="studentSemSelect"><option value="">-- Semester --</option><option value="1stNew">1st New</option><option value="1stOld">1st Old</option><option value="2ndNew">2nd New</option><option value="2ndOld">2nd Old</option><option value="3rdNew">3rd New</option><option value="3rdOld">3rd Old</option><option value="4th">4th</option><option value="5th">5th</option><option value="6th">6th</option><option value="7th">7th</option><option value="8th">8th</option></select>
+                <button id="studentOpenBtn">🔍 Open Syllabus</button>
+                <div id="studentMsg" style="background:#e8f0fe; padding:12px; border-radius:12px; margin-top:15px;">✅ Choose branch & semester</div>
+            </div>
+        </div>
     </div>
-</div>
 
-<!-- Developer Modal -->
-<div id="devModal" class="modal" onclick="closeDevModalOnBg(event)">
-    <div class="modal-box">
-        <div class="modal-top"><strong>👨‍💻 About Developer</strong><button class="close-modal" onclick="closeDevModal()">Close</button></div>
-        <div class="modal-content" style="text-align:center; padding:24px;">
-            <img loading="lazy" src="https://raw.githubusercontent.com/mdzafar864/BEU-Syllabus-App/main/Developer%20(2).png" style="width: 100px; border-radius: 50%; margin-bottom: 15px;" onerror="this.src='https://via.placeholder.com/100'">
-            <h3>Md Zafar</h3>
-            <p>Full-Stack Developer • UI/UX Designer • PWA Specialist</p>
-            <p>📧 <a href="mailto:mdzafarsabour35@gmail.com">mdzafarsabour35@gmail.com</a></p>
-            <p>🔗 <a href="https://www.linkedin.com/in/mdzafar864" target="_blank">LinkedIn Profile</a></p>
-            <a href="https://youtube.com/@engineers_pathway?si=27Bq_FHXS2vm_Xi0" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #ff0000 0%, #ff6b6b 100%); color: white; padding: 12px 24px; border-radius: 50px; margin-top: 15px; text-decoration: none; font-weight: bold;">▶ Visit My YouTube Channel</a>
-            <hr style="margin: 20px 0;">
-            <p>This application provides fast access to BEU syllabus. Fully responsive with Firebase Authentication and real-time database management.</p>
-            <p><strong>Version:</strong> 3.0 (Firebase Auth + Cloud DB)</p>
+    <!-- Admin Dashboard -->
+    <div id="adminDashboard" class="dashboard">
+        <div class="sidebar admin-sidebar">
+            <div class="user-card"><img id="adminUserAvatar" src="https://via.placeholder.com/80"><h4 id="adminUserName">Admin</h4><p id="adminUserEmail">email</p><p id="adminUserRole">Administrator</p></div>
+            <div class="menu-item"><i class="fas fa-database"></i> Manage Syllabus</div>
+            <div id="adminLogoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</div>
+        </div>
+        <div class="main-content">
+            <div class="box"><h2>⚙️ Admin Dashboard — PDF Management</h2>
+                <div class="flex-row"><select id="adminSem"><option value="">Semester</option><option value="1stNew">1st New</option><option value="1stOld">1st Old</option><option value="2ndNew">2nd New</option><option value="2ndOld">2nd Old</option><option value="3rdNew">3rd New</option><option value="3rdOld">3rd Old</option><option value="4th">4th</option><option value="5th">5th</option><option value="6th">6th</option><option value="7th">7th</option><option value="8th">8th</option></select>
+                <select id="adminBranch"><option value="">Branch</option><option value="CE">CE</option><option value="CS">CS</option><option value="IOT">IOT</option><option value="EE">EE</option><option value="ECE">ECE</option><option value="ME">ME</option></select></div>
+                <input type="text" id="pdfUrlInput" placeholder="PDF Embed Link">
+                <div class="flex-row"><button id="savePdfBtn">💾 Save</button><button id="deletePdfBtn" class="del-link" style="background:#f44336;">🗑️ Delete</button></div>
+                <div id="adminMsg"></div>
+                <div class="admin-table-wrap"><table><thead><tr><th>Semester</th><th>Branch</th><th>PDF Link</th><th>Actions</th></tr></thead><tbody id="adminTableBody"><tr><td colspan="4">Loading...</td></tr></tbody></table></div>
+                <button id="resetDefaultBtn" style="background:#ff9800;">↻ Reset to Default</button>
+            </div>
         </div>
     </div>
 </div>
+<div id="pdfModal" class="modal" onclick="closePDFModalOnBg(event)"><div class="modal-box"><div class="modal-top"><strong>📄 Syllabus PDF</strong><button class="close-modal" onclick="closePDFModal()">Close</button></div><iframe id="pdfFrame"></iframe></div></div>
+<script type="text/javascript">
+    window.showStudentLogin = window.showStudentLogin || function(){};
+    window.showStudentRegister = window.showStudentRegister || function(){};
+    window.showAdminLogin = window.showAdminLogin || function(){};
+    window.showAdminRegister = window.showAdminRegister || function(){};
+    window.closePDFModal = window.closePDFModal || function(){};
+    window.closePDFModalOnBg = window.closePDFModalOnBg || function(){};
+</script>
 </body>
 </html>
-```
